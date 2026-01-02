@@ -1,5 +1,5 @@
 /* src/router/index.ts */
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
 import AdminLayout from '@/layouts/AdminLayout.vue'
@@ -46,11 +46,11 @@ const routes: RouteRecordRaw[] = [
     component: AdminLayout,
     meta: { requiresAuth: true },
     children: [
-      { path: '', redirect: '/admin/products', name: 'admin-root' },
+      { path: '', redirect: 'products', name: 'admin-root' },
 
       // 产品管理
       {
-        path: '/admin/categories',
+        path: 'categories',
         name: 'AdminCategories',
         component: () => import('@/views/admin/products/CategoryList.vue'),
       },
@@ -93,11 +93,11 @@ const routes: RouteRecordRaw[] = [
 
       // 内容管理
       {
-        path: '/admin/content/:key',
+        path: 'content/:key',
         component: () => import('@/views/admin/content/ContentPage.vue'),
       },
       {
-        path: '/admin/system/company-contact',
+        path: 'system/company-contact',
         name: 'ContactCompany',
         component: () => import('@/views/admin/system/ContactCompany.vue'),
         meta: {
@@ -105,7 +105,7 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: '/admin/system/company-about',
+        path: 'system/company-about',
         name: 'AboutCompany',
         component: () => import('@/views/admin/system/AboutCompany.vue'),
         meta: {
@@ -117,7 +117,7 @@ const routes: RouteRecordRaw[] = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHashHistory(import.meta.env.BASE_URL),
   routes,
 
   //“逻辑跳转 + 视觉回到顶部”
