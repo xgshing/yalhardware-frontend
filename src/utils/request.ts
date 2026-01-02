@@ -1,11 +1,13 @@
-// src/api/request.ts
+// src/utils/request.ts
 import axios from 'axios'
 import type { InternalAxiosRequestConfig, AxiosResponse } from 'axios'
 import { ElMessage } from 'element-plus'
 
 // 创建 axios 实例
+const API_BASE = import.meta.env.VITE_API_BASE_URL
+
 const request = axios.create({
-  baseURL: '/api',
+  baseURL: `${API_BASE}/api`,
   timeout: 10000,
 })
 

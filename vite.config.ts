@@ -40,5 +40,5 @@ export default defineConfig({
     },
   },
 
-  base: "/yalhardware/", // ← 添加这行
+  base: "/yalhardware-frontend/", // ← 添加这行
 });
