@@ -1,0 +1,1 @@
+function i(e){if(!e)return"";if(e.cover)return e.cover;if(e.style_image)return e.style_image;if(e.styleImage)return e.styleImage;const a=e.detail_images||e.detailImages||[];return Array.isArray(a)&&a.length>0?a[0]:""}export{i as g};
