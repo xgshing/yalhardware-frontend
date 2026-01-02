@@ -1,6 +1,5 @@
 // src/services/product.service.ts
 //前端展示，只读接口
-import { http } from '../http'
 import request from '@/utils/request'
 import type { Product, CategoryProducts } from '@/types/product'
 

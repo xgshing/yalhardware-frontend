@@ -1,5 +1,4 @@
 // src/services/admin/product.service.admin.ts
-import { http } from '@/services/http'
 import request from '@/utils/request'
 
 /* ===================== List ===================== */

@@ -1,5 +1,4 @@
 // src/services/admin/category.service.admin.ts
-import { http } from '@/services/http'
 import request from '@/utils/request'
 
 export function fetchCategoryTree() {
