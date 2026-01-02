@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import axios from 'axios'
 import type { User } from '@/types/auth'
+import request from '@/utils/request'
 
 export const useAuthStore = defineStore('auth', () => {
   // 状态
@@ -44,12 +45,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   // 计算属性
-  const isAuthenticated = computed(() => {
-    const hasToken = !!token.value
-    const hasUser = !!user.value
-    console.log(`🔐 检查认证: token=${hasToken}, user=${hasUser}`)
-    return hasToken && hasUser
-  })
+  const isAuthenticated = computed(() => !!token.value && !!user.value)
 
   // 登录方法
   const login = async (username: string, password: string) => {
@@ -57,138 +53,64 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
 
     try {
-      console.log('🔐 开始登录:', username)
-
-      const response = await axios.post('http://localhost:8000/api/token/', {
+      const { data } = await request.post('/token/', {
         username,
         password,
       })
 
-      console.log('✅ 登录成功，响应:', response.data)
+      token.value = data.access
+      localStorage.setItem('token', data.access)
+      localStorage.setItem('refresh', data.refresh)
 
-      // 保存 token
-      const { access, refresh } = response.data
-      token.value = access
-      localStorage.setItem('token', access)
-      localStorage.setItem('refresh', refresh)
-
-      // 获取用户信息
-      await fetchUserInfo(access)
-
-      console.log('🎉 登录流程完成')
+      await fetchUserInfo()
       return { success: true }
     } catch (err: any) {
-      console.error('❌ 登录失败:', err)
-
-      error.value =
-        err.response?.data?.detail ||
-        err.response?.data?.message ||
-        '登录失败，请检查用户名和密码'
-
-      // 清理无效的认证信息
+      error.value = '登录失败'
       logout()
-
-      return { success: false, error: error.value }
+      return { success: false }
     } finally {
       isLoading.value = false
     }
   }
 
-  // 获取用户信息
-  const fetchUserInfo = async (accessToken: string) => {
-    try {
-      console.log('👤 获取用户信息...')
-
-      const response = await axios.get('http://localhost:8000/api/user/', {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      })
-
-      console.log('✅ 用户信息:', response.data)
-
-      user.value = response.data
-      localStorage.setItem('user', JSON.stringify(response.data))
-    } catch (err) {
-      console.error('❌ 获取用户信息失败:', err)
-      throw err
-    }
+  const fetchUserInfo = async () => {
+    const { data } = await request.get('/user/')
+    user.value = data
+    localStorage.setItem('user', JSON.stringify(data))
   }
 
-  // 验证 token
   const validateToken = async () => {
-    if (!token.value) return false
-
     try {
-      console.log('🔍 验证 token...')
-
-      await axios.get('http://localhost:8000/api/token/verify/', {
-        headers: {
-          Authorization: `Bearer ${token.value}`,
-        },
-      })
-
-      console.log('✅ Token 有效')
+      await request.get('/token/verify/')
       return true
-    } catch (err) {
-      console.warn('⚠️ Token 无效或已过期')
-
-      // 尝试刷新 token
+    } catch {
       try {
         await refreshToken()
         return true
       } catch {
-        console.log('❌ 刷新 token 失败，需要重新登录')
         logout()
         return false
       }
     }
   }
 
-  // 刷新 token
   const refreshToken = async () => {
-    const refreshToken = localStorage.getItem('refresh')
+    const refresh = localStorage.getItem('refresh')
+    if (!refresh) throw new Error('no refresh token')
 
-    if (!refreshToken) {
-      throw new Error('没有 refresh token')
-    }
+    const { data } = await request.post('/token/refresh/', {
+      refresh,
+    })
 
-    console.log('🔄 刷新 token...')
-
-    try {
-      const response = await axios.post(
-        'http://localhost:8000/api/token/refresh/',
-        {
-          refresh: refreshToken,
-        }
-      )
-
-      const newAccessToken = response.data.access
-      token.value = newAccessToken
-      localStorage.setItem('token', newAccessToken)
-
-      console.log('✅ Token 刷新成功')
-      return newAccessToken
-    } catch (err) {
-      console.error('❌ 刷新 token 失败:', err)
-      throw err
-    }
+    token.value = data.access
+    localStorage.setItem('token', data.access)
   }
 
-  // 注销
   const logout = () => {
-    console.log('👋 注销用户')
-
     token.value = null
     user.value = null
-
-    localStorage.removeItem('token')
-    localStorage.removeItem('refresh')
-    localStorage.removeItem('user')
-
-    console.log('✅ 认证信息已清除')
+    localStorage.clear()
   }
-
   // 初始化
   initializeAuth()
 

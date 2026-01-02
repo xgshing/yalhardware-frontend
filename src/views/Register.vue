@@ -170,26 +170,11 @@
       // 调用注册API - 添加详细的 Promise 链跟踪
       console.log('4. 开始调用 registerApi...')
 
-      const promise = registerApi(requestData)
+      
 
       console.log('5. Promise 已创建，等待响应...')
 
-      // 添加 Promise 状态跟踪
-      promise
-        .then((res) => {
-          console.log('✅ then() 被调用，响应:', res)
-          console.log('✅ 响应状态:', res.status)
-          console.log('✅ 响应数据:', res.data)
-        })
-        .catch((err) => {
-          console.log('❌ catch() 被调用，错误:', err)
-        })
-        .finally(() => {
-          console.log('🔚 finally() 被调用')
-        })
-
-      const res = await promise
-      console.log('6. await 完成，收到响应:', res)
+      
 
       // 注册成功处理
       success.value = 'Account created successfully! Redirecting to login...'

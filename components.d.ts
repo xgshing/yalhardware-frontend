@@ -15,7 +15,6 @@ declare module 'vue' {
     Carousel: typeof import('./src/components/Carousel/Carousel.vue')['default']
     CarouselControls: typeof import('./src/components/CarouselControls.vue')['default']
     CarouselIndicators: typeof import('./src/components/Carousel/CarouselIndicators.vue')['default']
-    DebugInfo: typeof import('./src/components/DebugInfo.vue')['default']
     Drawer: typeof import('./src/components/Drawer.vue')['default']
     IconCommunity: typeof import('./src/components/icons/IconCommunity.vue')['default']
     IconLucideShoppingBag: typeof import('~icons/lucide/shopping-bag')['default']

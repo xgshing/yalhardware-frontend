@@ -120,6 +120,7 @@
   import { reactive, ref, onMounted, onUnmounted } from 'vue'
   import { useRouter } from 'vue-router'
   import { useCartStore } from '@/stores/cart'
+import request from '@/utils/request'
 
   const router = useRouter()
   const logo = reactive({
@@ -177,28 +178,19 @@
 
   // ===================== 获取后台分类 =====================
   async function fetchCategories() {
-    try {
-      const res = await fetch('/api/categories/')
-      const data = await res.json()
+  const res = await request.get('/categories/')
+  const data = res.data
 
-      menuItems.value = data.map((cat) => ({
-        id: cat.id,
-        text: cat.name,
-        hasDropdown: Array.isArray(cat.children) && cat.children.length > 0,
-        subItems: (cat.children || []).map((sub) => ({
-          id: sub.id,
-          text: sub.name,
-        })),
-      }))
-
-      // 初始化下拉状态
-      menuItems.value.forEach((i) => {
-        if (i.hasDropdown) dropdownStates[i.id] = false
-      })
-    } catch (err) {
-      console.error('获取分类失败', err)
-    }
-  }
+  menuItems.value = data.map((cat) => ({
+    id: cat.id,
+    text: cat.name,
+    hasDropdown: Array.isArray(cat.children) && cat.children.length > 0,
+    subItems: (cat.children || []).map((sub) => ({
+      id: sub.id,
+      text: sub.name,
+    })),
+  }))
+}
 
   // ===================== 页面滚动 =====================
   function handleScroll() {

@@ -10,7 +10,8 @@
 <script setup lang="ts">
   import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
   import Quill from 'quill'
-  import 'quill/dist/quill.snow.css'
+import 'quill/dist/quill.snow.css'
+  import request from '@/utils/request'
 
   // ------------------ Props ------------------
   interface Props {
@@ -29,18 +30,17 @@
   let quill: InstanceType<typeof Quill> | null = null
   // ------------------ 图片上传 ------------------
   const uploadImage = async (file: File): Promise<string> => {
-    const formData = new FormData()
-    formData.append('image', file)
+  const formData = new FormData()
+  formData.append('image', file)
 
-    const res = await fetch('/api/upload/rich-image/', {
-      method: 'POST',
-      body: formData,
-      credentials: 'include',
-    })
-    const data = await res.json()
-    return data.url
-  }
+  const res = await request.post('/upload/rich-image/', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  })
 
+  return res.data.url
+}
   // ------------------ 点击图片切换对齐 ------------------
   const handleImageClick = (img: HTMLImageElement) => {
     const currentAlign = img.getAttribute('data-align') || 'left'
