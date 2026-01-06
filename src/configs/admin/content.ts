@@ -1,10 +1,20 @@
-// src/configs/admin/content.ts
-import { ContentAPI } from '@/api/admin/content'
+// 定义每个内容模块的 UI 结构,驱动后台列表页 + 表单页的自动生成
+// src / configs / admin / content.ts
+import { contentApi } from '@/api/admin/content.api'
+import type { ContentCrudApi } from '@/types'
 
-export const contentConfigs = {
+export const contentConfigs: Record<
+  string,
+  {
+    title: string
+    api: ContentCrudApi
+    tableColumns: any[]
+    formFields: any[]
+  }
+> = {
   banners: {
     title: '首页轮播',
-    api: ContentAPI.banner,
+    api: contentApi.banners,
     tableColumns: [
       { prop: 'order', label: '排序', width: 80 },
       { prop: 'title', label: '标题' },
@@ -20,7 +30,7 @@ export const contentConfigs = {
 
   features: {
     title: '首页特色',
-    api: ContentAPI.feature,
+    api: contentApi.features,
     tableColumns: [
       { prop: 'order', label: '排序', width: 80 },
       { prop: 'title', label: '标题' },
@@ -36,7 +46,7 @@ export const contentConfigs = {
 
   stories: {
     title: '品牌故事',
-    api: ContentAPI.story,
+    api: contentApi.stories,
     tableColumns: [
       { prop: 'order', label: '排序', width: 80 },
       { prop: 'title', label: '标题' },

@@ -1,5 +1,5 @@
 // src/data/product-data.ts
-import type { Product } from '@/types/product'
+import type { Product } from '@/types/frontend/product'
 
 export const productsData = {
   Pliers: [

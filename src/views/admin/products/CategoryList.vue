@@ -1,12 +1,10 @@
 <!-- src/views/admin/products/CategoryList.vue -->
 <script setup lang="ts">
   import { ref, onMounted } from 'vue'
-  import {
-    fetchCategoryTree,
-    createCategory,
-  } from '@/services/admin/category.service.admin'
+  import { adminService } from '@/services'
+  import type { ProductCategory } from '@/types/frontend/product'
 
-  const treeData = ref([])
+  const treeData = ref<ProductCategory[]>([])
   const dialogVisible = ref(false)
   const form = ref({
     name: '',
@@ -14,7 +12,7 @@
   })
 
   async function loadTree() {
-    treeData.value = await fetchCategoryTree()
+    treeData.value = await adminService.fetchCategoryTree()
   }
 
   function openCreate(parentId: number | null = null) {
@@ -24,7 +22,7 @@
 
   async function submit() {
     try {
-      await createCategory(form.value)
+      await adminService.createCategory(form.value)
       dialogVisible.value = false
       await loadTree()
     } catch (err) {

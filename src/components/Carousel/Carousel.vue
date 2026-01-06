@@ -23,7 +23,7 @@
       />
       <div class="img_info">
         <h1 class="img_title">{{ slide.title }}</h1>
-        <p class="img_content">{{ slide.content }}</p>
+        <p class="img_content">{{ slide.description }}</p>
       </div>
       <!-- 你也可以在这里放任何自定义的HTML结构 -->
     </Slide>

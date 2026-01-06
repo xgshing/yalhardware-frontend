@@ -14,6 +14,7 @@
         <QuillEditor
           v-model="form.about_html"
           :modules="editorModules"
+          @upload-image="handleImageUpload"
         />
       </el-form-item>
 
@@ -36,7 +37,7 @@
 
   import QuillEditor from '@/components/editor/QuillEditor.vue'
   import '@vueup/vue-quill/dist/vue-quill.snow.css'
-  import { getCompanyProfile, saveCompanyProfile } from '@/api/admin/company'
+  import { adminService } from '@/services'
 
   /* ---------------- state ---------------- */
   const form = ref({
@@ -59,8 +60,8 @@
   /* ---------------- api ---------------- */
   const loadData = async () => {
     try {
-      const res = await getCompanyProfile()
-      form.value.about_html = res.data?.about_html || ''
+      const data = await adminService.getCompanyProfile()
+      form.value.about_html = data.about_html || ''
     } catch (e) {
       ElMessage.error('获取公司介绍失败')
     }
@@ -69,7 +70,9 @@
   const save = async () => {
     loading.value = true
     try {
-      await saveCompanyProfile({ about_html: form.value.about_html })
+      await adminService.saveCompanyProfile({
+        about_html: form.value.about_html,
+      })
       ElMessage.success('保存成功')
     } catch (e) {
       ElMessage.error('保存失败')
@@ -78,6 +81,16 @@
     }
   }
 
+  // 富文本图片上传
+  const handleImageUpload = async (file: File) => {
+    try {
+      const res = await adminService.uploadRichImage(file)
+      return res.data?.url || ''
+    } catch (error) {
+      ElMessage.error('图片上传失败')
+      return ''
+    }
+  }
   onMounted(loadData)
 </script>
 

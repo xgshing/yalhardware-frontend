@@ -96,14 +96,24 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, watch, nextTick } from 'vue'
+  import { ref, onMounted, watch, nextTick, computed } from 'vue'
   import { useRoute } from 'vue-router'
   import ContentForm from '@/views/admin/content/ContentForm.vue'
   import { contentConfigs } from '@/configs/admin/content'
 
   const route = useRoute()
-  const key = ref(route.params.key as keyof typeof contentConfigs)
-  const config = ref(contentConfigs[key.value])
+
+  type ContentKey = keyof typeof contentConfigs
+  type FormConfig = (typeof contentConfigs)[ContentKey]
+
+  const key = ref<ContentKey>(route.params.key as ContentKey)
+  const config = computed<FormConfig>(() => {
+    const cfg = contentConfigs[key.value]
+    if (!cfg) {
+      throw new Error(`Invalid content key: ${key.value}`)
+    }
+    return cfg
+  })
 
   const list = ref<any[]>([])
   const loaded = ref(true)
@@ -248,9 +258,10 @@
     () => route.params.key,
     async (newKey) => {
       if (!newKey) return
+
       key.value = newKey as keyof typeof contentConfigs
-      config.value = contentConfigs[key.value]
       console.log('[DEBUG] route key changed, newKey=', newKey)
+
       await fetchList()
     }
   )

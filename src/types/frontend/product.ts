@@ -47,13 +47,6 @@ export interface CategoryProducts {
   [key: string]: Product[]
 }
 
-export interface CardData {
-  id: number
-  title: string
-  description: string
-  imageUrl: string
-}
-
 export interface AccordionItem {
   title: string
   isOpen: boolean
@@ -99,11 +92,40 @@ export interface SimilarProductsProps {
 
 export interface CommitmentItem {
   id: number
-  text_title: string
-  text_content: string
+  title: string
+  description: string
+}
+
+export interface CardData {
+  id: number
+  title: string
+  description: string
+  images: string[]
+}
+
+export interface BannerItem {
+  id: number
+  title: string
+  content: string
+  images: string[]
 }
 
 export interface ProductImage {
   id: number
   image: string
+}
+
+export interface HomeData {
+  categoryProducts: CategoryProducts
+  allProducts: Product[]
+  stories: CommitmentItem[]
+  features: CardData[]
+  banners: BannerItem[]
+}
+
+export interface ProductCategory {
+  id: number
+  name: string
+  parent: number | null // 父级分类ID
+  children: ProductCategory[] // 子分类数组
 }

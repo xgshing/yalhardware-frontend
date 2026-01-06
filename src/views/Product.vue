@@ -156,7 +156,7 @@
       <vue-easy-lightbox
         :visible="lightboxVisible"
         :imgs="images"
-        :index="currentIndex"
+        :index="activeIndex"
         @hide="lightboxVisible = false"
       />
 
@@ -306,12 +306,9 @@
   import 'swiper/css/effect-fade'
 
   /* ================= 数据接口 ================= */
-  import {
-    fetchProductById,
-    fetchCategoryProducts,
-  } from '@/services/frontend/product.service'
+  import { frontendService } from '@/services'
 
-  import type { Product } from '@/types/product'
+  import type { Product } from '@/types/frontend/product'
 
   /* ================= 路由 ================= */
   const route = useRoute()
@@ -407,7 +404,7 @@
     const id = productId.value
     if (!id) return
 
-    const product = await fetchProductById(id)
+    const product = await frontendService.fetchProductById(id)
     productData.value = product
 
     /* ===== 图片优先级：variants.style_image → detail_images.image ===== */
@@ -557,7 +554,7 @@
   /* ================= 生命周期 ================= */
   onMounted(async () => {
     await loadProduct()
-    categoryProductsMap.value = await fetchCategoryProducts()
+    categoryProductsMap.value = await frontendService.fetchCategoryProducts()
   })
 
   watch(

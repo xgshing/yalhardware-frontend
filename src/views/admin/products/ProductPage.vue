@@ -12,11 +12,7 @@
   import { useRoute, useRouter } from 'vue-router'
   import { ElLoading, ElMessage } from 'element-plus'
   import ProductForm from './ProductForm.vue'
-  import {
-    fetchAdminProductDetail,
-    createAdminProduct,
-    updateAdminProduct,
-  } from '@/services/admin/product.service.admin'
+  import { adminService } from '@/services'
 
   /* ================= 路由 ================= */
   const route = useRoute()
@@ -34,7 +30,7 @@
     loaded.value = false
 
     try {
-      const data = await fetchAdminProductDetail(id)
+      const data = await adminService.fetchAdminProductDetail(id)
 
       initialData.value = {
         form: {
@@ -94,11 +90,11 @@
 
     try {
       if (isEdit()) {
-        await updateAdminProduct(Number(route.params.id), fd)
+        await adminService.updateAdminProduct(Number(route.params.id), fd)
         ElMessage.success('保存成功')
         router.push('/admin/products')
       } else {
-        await createAdminProduct(fd)
+        await adminService.createAdminProduct(fd)
         ElMessage.success('创建成功')
         router.push('/admin/products')
       }

@@ -79,7 +79,7 @@
   import { ref, computed, onMounted, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
 
-  import { getCompanyProfile } from '@/api/admin/company'
+  import { getCompanyProfile } from '@/api/admin/company.api'
 
   const route = useRoute()
   const router = useRouter()

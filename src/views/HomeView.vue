@@ -14,7 +14,7 @@
             class="product product-no_1"
           >
             <img
-              :src="getFullUrl(topProduct.cover || '/default-product.png')"
+              :src="topProduct.cover"
               :alt="topProduct.name"
               class="main-product-image"
             />
@@ -64,8 +64,8 @@
           :key="item.id"
           class="commitment-item"
         >
-          <p class="title">{{ item.text_title }}</p>
-          <p class="desc">{{ item.text_content }}</p>
+          <p class="title">{{ item.title }}</p>
+          <p class="desc">{{ item.description }}</p>
         </div>
       </div>
 
@@ -79,7 +79,7 @@
           class="fixed-left-card"
           :title="cardsData[0]?.title ?? ''"
           :description="cardsData[0]?.description ?? ''"
-          :image-url="getFullUrl(cardsData[0]?.imageUrl ?? '')"
+          :image-url="cardsData[0]?.imageUrl ?? ''"
           :show-number="false"
           :is-left-fixed="true"
         />
@@ -91,7 +91,7 @@
             :id="card.id"
             :title="card.title"
             :description="card.description"
-            :image-url="getFullUrl(card.imageUrl)"
+            :image-url="card.imageUrl"
             :number="index + 2"
             :is-hovered="productHoverStates[card.id] || false"
             @mouseenter="handleProductHover(card.id)"
@@ -125,7 +125,7 @@
       </div>
 
       <!-- ============ 轮播图 ============ -->
-      <Carousel_test
+      <Carousel
         :slides="carouselData"
         :duration="3000"
         :speed="1000"
@@ -155,52 +155,33 @@
   import { useRouter } from 'vue-router'
 
   import NavBar from '@/components/NavBar.vue'
-  import Carousel_test from '@/components/Carousel/Carousel.vue'
+  import Carousel from '@/components/Carousel/Carousel.vue'
   import SustainableCraftsmanshipCard from '@/components/CorporationMission/SustainableCraftsmanshipCard.vue'
   import InteractiveCard from '@/components/CorporationMission/InteractiveCard.vue'
   import ProductCard from '@/components/ProductCard.vue'
 
-  import type {
-    Product,
-    CategoryProducts,
-    CardData,
-    CommitmentItem,
-  } from '@/types/product'
-  import {
-    fetchAllProducts,
-    fetchCategoryProducts,
-  } from '@/services/frontend/product.service'
-  import { fetchAdminProducts } from '@/services/admin/product.service.admin'
-  import {
-    fetchStories,
-    fetchFeatures,
-    fetchBanners,
-  } from '@/services/frontend/home.service'
+  import type { Product } from '@/types/frontend/product'
+  import { useHomeData } from '@/composables/useHomeData'
 
   const router = useRouter()
 
+  /* ==================== composable ==================== */
+  const {
+    productsByCategory,
+    products,
+    commitments,
+    cardsData,
+    carouselData,
+    recommendedProducts,
+    load,
+  } = useHomeData()
+
   // ==================== 响应式变量 ====================
-  const productsByCategory = ref<CategoryProducts>({})
-  const products = ref<Product[]>([])
+
   const productHoverStates = ref<Record<number, boolean>>({})
 
   // 分类
   const categoryList = computed(() => productsByCategory.value)
-
-  // 公司承诺（品牌理念）
-  const commitments = ref<CommitmentItem[]>([])
-
-  // 核心卖点卡片
-  const cardsData = ref<CardData[]>([])
-  const rightCardsData = computed(() => cardsData.value.slice(1))
-
-  // 轮播图
-  const carouselData = ref<
-    { imageUrl: string; title: string; content: string }[]
-  >([])
-
-  // 推荐产品
-  const recommendedProducts = ref<Product[]>([])
 
   // ==================== 悬停处理 ====================
   const handleProductHover = (id: number) => {
@@ -208,13 +189,6 @@
   }
   const handleProductLeave = (id: number) => {
     productHoverStates.value[id] = false
-  }
-
-  // ==================== 图片获取 ====================
-  const getFullUrl = (url: string) => {
-    if (!url) return ''
-    if (url.startsWith('http')) return url
-    return `${import.meta.env.VITE_API_BASE_URL}${url}`
   }
 
   // 图片标准化
@@ -260,6 +234,7 @@
   }
 
   // 畅销产品计算
+  const rightCardsData = computed(() => cardsData.value.slice(1))
   const allProducts = computed(() =>
     Object.values(productsByCategory.value).flatMap((p) => p)
   )
@@ -280,6 +255,23 @@
       .find((img) => !!img)
     return firstImage ?? '/default-category.png'
   }
+
+  // ==================== 品牌理念/核心卖点/轮播图片获取第一张图片 ====================
+  const getFirstImage = (images?: any[]) => {
+    if (!images || !images.length) return ''
+
+    const img = images[0]
+
+    // banner / story
+    if (img.image) return img.image
+
+    // feature
+    if (img.icon) return img.icon
+
+    return ''
+  }
+
+  // ==================== 跳转到产品分类页 ====================
   const openCategory = (categoryName: string) => {
     router.push({
       name: 'product-categories',
@@ -287,7 +279,7 @@
     })
   }
 
-  // 产品详情跳转
+  // ==================== 跳转到产品详情页 ====================
   const findProductCategoryName = (id: number): string => {
     const product = products.value.find((p) => p.id === id)
     return product?.category?.name ?? 'Uncategorized'
@@ -303,50 +295,9 @@
   // ==================== 合并 onMounted ====================
   onMounted(async () => {
     try {
-      // ====== 分类和全部产品 ======
-      productsByCategory.value = await fetchCategoryProducts()
-      products.value = await fetchAllProducts()
-
-      // ====== 品牌理念（stories） ======
-      const stories = await fetchStories()
-      commitments.value = stories.map((s: any) => ({
-        id: s.id,
-        text_title: s.title,
-        text_content: s.description,
-        image: s.images?.[0]?.image_url ?? '',
-      }))
-
-      // ====== 核心卖点（features） ======
-      const features = await fetchFeatures()
-      cardsData.value = features.map((f: any) => ({
-        id: f.id,
-        title: f.title,
-        description: f.description,
-        imageUrl: f.images?.[0]?.image_url ?? '',
-      }))
-
-      // ====== 轮播图（banners） ======
-      const banners = await fetchBanners()
-      carouselData.value = banners.map((b: any) => ({
-        title: b.title,
-        content: b.description,
-        imageUrl: b.images?.[0]?.image_url ?? '/default-banner.png',
-      }))
-
-      // ====== 推荐产品 ======
-      const allAdminProducts: Product[] = await fetchAdminProducts()
-      console.log('allAdminProducts', allAdminProducts) // 🔍检查返回内容
-      recommendedProducts.value = allAdminProducts
-        .filter((p) => p.is_featured)
-        .slice(0, 4)
-      console.log('recommendedProducts', recommendedProducts.value)
-    } catch (err) {
-      console.error('Failed to fetch home page data', err)
-      // 避免 undefined
-      commitments.value = commitments.value || []
-      cardsData.value = cardsData.value || []
-      carouselData.value = carouselData.value || []
-      recommendedProducts.value = recommendedProducts.value || []
+      await load()
+    } catch (e) {
+      console.error('Failed to load home page data', e)
     }
   })
 </script>

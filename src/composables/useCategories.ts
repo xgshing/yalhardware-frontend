@@ -1,7 +1,9 @@
 // src/composables/useCategories.ts
-import { categoryApi, type Category } from '@/api'
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
+
+import { adminService } from '@/services'
+import type { ProductCategory } from '@/types/frontend/product'
 
 interface CreateCategoryPayload {
   name: string
@@ -9,48 +11,58 @@ interface CreateCategoryPayload {
 }
 
 export function useCategories() {
-  const categories = ref<Category[]>([])
+  /* ================= state ================= */
+  const categories = ref<ProductCategory[]>([])
   const loading = ref(false)
   const showAddCategory = ref(false)
   const newCategoryName = ref('')
 
+  /* ================= actions ================= */
+
+  /** 获取分类树 */
   const fetchCategories = async () => {
     loading.value = true
     try {
-      const res = await categoryApi.getCategories()
-      categories.value = res // 如果 categoryApi.getCategories 已经返回 data，请写 categories.value = res.data
-    } catch {
+      categories.value = await adminService.fetchCategoryTree()
+    } catch (e) {
       ElMessage.error('获取分类失败')
     } finally {
       loading.value = false
     }
   }
 
-  const createCategory = async (
+  /** 新建分类 */
+  const addCategory = async (
     data: CreateCategoryPayload
-  ): Promise<Category | null> => {
+  ): Promise<ProductCategory | null> => {
     if (!data.name.trim()) {
       ElMessage.warning('分类名称不能为空')
       return null
     }
 
     try {
-      const res = await categoryApi.createCategory(data)
-      categories.value.push(res) // 如果 categoryApi.createCategory 返回 data
+      const created = await adminService.createCategory(data)
+
+      // ⚠️ 如果是树结构，真实项目里通常要重新 fetch
+      await fetchCategories()
+
       ElMessage.success('分类创建成功')
-      return res
-    } catch {
+      return created
+    } catch (e) {
       ElMessage.error('分类创建失败')
       return null
     }
   }
 
   return {
+    /* state */
     categories,
     loading,
     showAddCategory,
     newCategoryName,
+
+    /* actions */
     fetchCategories,
-    createCategory,
+    addCategory,
   }
 }

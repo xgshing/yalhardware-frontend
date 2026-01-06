@@ -57,16 +57,14 @@
   import { ref, computed, onMounted, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
 
-  /* ================== Components ================== */
   import NavBar from '@/components/NavBar.vue'
   import ProductCard from '@/components/ProductCard.vue'
 
-  /* ================== Services & Utils ================== */
-  import { fetchCategoryProducts } from '@/services/frontend/product.service'
   import { getPrimaryImage } from '@/utils/images'
 
-  /* ================== Types ================== */
-  import type { Product, CategoryProducts } from '@/types/product'
+  import type { Product, CategoryProducts } from '@/types/frontend/product'
+
+  import { frontendService } from '@/services'
 
   /* ================== Router ================== */
   const route = useRoute()
@@ -112,7 +110,8 @@
 
     if (Object.keys(categoryProductsMap.value).length === 0) {
       try {
-        categoryProductsMap.value = await fetchCategoryProducts()
+        categoryProductsMap.value =
+          await frontendService.fetchCategoryProducts()
       } catch (err) {
         console.error('获取分类产品失败', err)
         categoryProductsMap.value = {}

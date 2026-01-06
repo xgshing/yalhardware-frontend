@@ -119,7 +119,8 @@
   import { ElMessage } from 'element-plus'
   import ImageUpload from '@/components/ImageUpload.vue'
   import { useCategories } from '@/composables/useCategories'
-  import { fetchCategoryTree } from '@/services/admin/category.service.admin'
+  import { adminService } from '@/services'
+  import type { ProductCategory } from '@/types/frontend/product'
 
   /* ========== props / emits ========== */
   const props = defineProps<{
@@ -137,7 +138,7 @@
 
   /* ========== 分类 ========== */
   const { fetchCategories } = useCategories()
-  const categoryTree = ref([])
+  const categoryTree = ref<ProductCategory[]>([])
 
   /* ========== 表单 ========== */
   const form = ref({
@@ -162,7 +163,7 @@
 
   /* ========== 初始化 ========== */
   onMounted(async () => {
-    categoryTree.value = await fetchCategoryTree()
+    categoryTree.value = await adminService.fetchCategoryTree()
   })
 
   watch(

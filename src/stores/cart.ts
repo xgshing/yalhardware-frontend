@@ -3,7 +3,7 @@
 // src/stores/cart.ts
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { CartItem } from '@/types/product'
+import type { CartItem } from '@/types/frontend/product'
 
 export const useCartStore = defineStore('cart', () => {
   const items = ref<CartItem[]>([])

@@ -2,7 +2,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import axios from 'axios'
-import type { User } from '@/types/auth'
+import type { User } from '@/types/frontend/auth'
 import request from '@/utils/request'
 
 export const useAuthStore = defineStore('auth', () => {

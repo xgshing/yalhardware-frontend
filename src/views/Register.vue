@@ -87,8 +87,6 @@
   import LoginInput from '@/components/login/LoginInput.vue'
 
   import { useRouter } from 'vue-router'
-  // 导入API函数（需要自行创建）
-  import { registerApi } from '@/api/auth'
 
   // 定义响应式数据
   const firstName = ref('') // 名字
@@ -168,13 +166,10 @@
       console.log('3. 准备请求数据:', requestData)
 
       // 调用注册API - 添加详细的 Promise 链跟踪
+
       console.log('4. 开始调用 registerApi...')
 
-      
-
       console.log('5. Promise 已创建，等待响应...')
-
-      
 
       // 注册成功处理
       success.value = 'Account created successfully! Redirecting to login...'

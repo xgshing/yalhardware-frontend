@@ -4,7 +4,7 @@
  * 获取产品的第一张可用图片URL
  * 图片获取优先级：cover > style_image > detail_images
  */
-import type { Product } from '@/types/product'
+import type { Product } from '@/types/frontend/product'
 
 export function getPrimaryImage(product: Product): string {
   if (!product) return ''

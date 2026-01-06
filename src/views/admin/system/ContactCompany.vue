@@ -1,3 +1,4 @@
+<!-- src/views/admin/system/ContactCompany.vue -->
 <template>
   <el-card class="company-card">
     <template #header>
@@ -53,7 +54,7 @@
 <script setup lang="ts">
   import { ref, onMounted } from 'vue'
   import { ElMessage } from 'element-plus'
-  import { getCompanyProfile, saveCompanyProfile } from '@/api/admin/company'
+  import { adminService } from '@/services'
 
   const loading = ref(false)
 
@@ -67,10 +68,9 @@
 
   const loadData = async () => {
     try {
-      const res = await getCompanyProfile()
-      if (res.data) {
-        Object.assign(form.value, res.data)
-      }
+      const data = await adminService.getCompanyProfile()
+
+      Object.assign(form.value, data)
     } catch (error) {
       console.error('加载公司信息失败', error)
     }
@@ -79,7 +79,7 @@
   const save = async () => {
     loading.value = true
     try {
-      await saveCompanyProfile(form.value)
+      await adminService.saveCompanyProfile(form.value)
       ElMessage.success('保存成功')
     } finally {
       loading.value = false
