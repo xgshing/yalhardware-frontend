@@ -79,7 +79,7 @@
   import { ref, computed, onMounted, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
 
-  import { getCompanyProfile } from '@/api/admin/company.api'
+  import { adminService } from '@/services'
 
   const route = useRoute()
   const router = useRouter()
@@ -105,8 +105,7 @@
 
   /* ================== Load Company Info ================== */
   const loadCompanyProfile = async () => {
-    const res = await getCompanyProfile()
-    company.value = res.data || {}
+    company.value = await adminService.getCompanyProfile()
   }
 
   /* ================== Life Cycle ================== */

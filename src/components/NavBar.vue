@@ -120,7 +120,7 @@
   import { reactive, ref, onMounted, onUnmounted } from 'vue'
   import { useRouter } from 'vue-router'
   import { useCartStore } from '@/stores/cart'
-import request from '@/utils/request'
+  import { adminService } from '@/services'
 
   const router = useRouter()
   const logo = reactive({
@@ -178,19 +178,17 @@ import request from '@/utils/request'
 
   // ===================== 获取后台分类 =====================
   async function fetchCategories() {
-  const res = await request.get('/categories/')
-  const data = res.data
-
-  menuItems.value = data.map((cat) => ({
-    id: cat.id,
-    text: cat.name,
-    hasDropdown: Array.isArray(cat.children) && cat.children.length > 0,
-    subItems: (cat.children || []).map((sub) => ({
-      id: sub.id,
-      text: sub.name,
-    })),
-  }))
-}
+    const data = await adminService.fetchCategoryTree()
+    menuItems.value = data.map((cat) => ({
+      id: cat.id,
+      text: cat.name,
+      hasDropdown: Array.isArray(cat.children) && cat.children.length > 0,
+      subItems: (cat.children || []).map((sub) => ({
+        id: sub.id,
+        text: sub.name,
+      })),
+    }))
+  }
 
   // ===================== 页面滚动 =====================
   function handleScroll() {
