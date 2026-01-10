@@ -1,6 +1,7 @@
 <!-- src/views/HomeView.vue -->
 <template>
   <div class="home">
+    <!-- 顶部导航栏 -->
     <NavBar />
 
     <main class="main-content">
@@ -8,22 +9,25 @@
       <section class="favorite-products">
         <h1>Favorites</h1>
         <div class="products-row">
-          <!-- 销量第一产品 -->
+          <!-- ===== 销量第一的主推产品 ===== -->
           <div
             v-if="topProduct"
             class="product product-no_1"
           >
+            <!-- 大图展示 -->
             <img
               :src="topProduct.cover"
               :alt="topProduct.name"
               class="main-product-image"
             />
+            <!-- 产品信息区域：支持点击跳转 & 悬停切换图片 -->
             <div
               class="product-info"
               @click="openProduct(topProduct)"
               @mouseenter="handleProductHover(topProduct.id)"
               @mouseleave="handleProductLeave(topProduct.id)"
             >
+              <!-- 悬停切换的缩略图 -->
               <div class="thumbnail-container">
                 <img
                   :src="getCurrentImage(topProduct)"
@@ -31,6 +35,7 @@
                   class="product-thumbnail"
                 />
               </div>
+              <!-- 产品文字信息 -->
               <div class="product-details">
                 <div class="first-product-title">{{ topProduct.name }}</div>
                 <div class="first-product-reviews">
@@ -38,11 +43,12 @@
                 </div>
                 <div class="first-product-price">{{ topProduct.price }}</div>
               </div>
+              <!-- 右上角跳转提示 -->
               <div class="circle">↗</div>
             </div>
           </div>
 
-          <!-- 销量第二、第三产品 -->
+          <!-- ===== 销量第二、第三的产品（复用 ProductCard） ===== -->
           <div class="product-ranking-grid">
             <ProductCard
               v-for="item in secondAndThirdProducts"
@@ -57,7 +63,7 @@
         </div>
       </section>
 
-      <!-- ============ 品牌理念 ============ -->
+      <!-- ==================== 品牌理念区域 ==================== -->
       <div class="commitment-container">
         <div
           v-for="item in commitments"
@@ -69,12 +75,12 @@
         </div>
       </div>
 
-      <!-- ============ 核心卖点 ============ -->
+      <!-- ==================== 核心卖点 / 企业使命 ==================== -->
       <h1 class="company-pursuit-title">
         Beyond beauty: crafting a better future
       </h1>
       <div class="sustainable-craftsmanship-container">
-        <!-- 左侧固定卡片 -->
+        <!-- 左侧固定展示卡片 -->
         <SustainableCraftsmanshipCard
           class="fixed-left-card"
           :title="cardsData[0]?.title ?? ''"
@@ -83,7 +89,7 @@
           :show-number="false"
           :is-left-fixed="true"
         />
-        <!-- 右侧交互卡片 -->
+        <!-- 右侧可交互卡片 -->
         <div class="right-container">
           <InteractiveCard
             v-for="(card, index) in rightCardsData"
@@ -100,7 +106,7 @@
         </div>
       </div>
 
-      <!-- ============ 产品种类区域 ============ -->
+      <!-- ==================== 产品分类区域 ==================== -->
       <h1 class="company-pursuit-title">Product categories</h1>
       <div class="category-grid">
         <div
@@ -109,6 +115,7 @@
           class="category-card"
           @click="openCategory(categoryName)"
         >
+          <!-- 分类封面图 -->
           <div class="img-container">
             <img
               :src="getCategoryImage(products)"
@@ -116,22 +123,24 @@
               class="category-image"
             />
           </div>
+          <!-- 分类名称与箭头 -->
           <div class="title-arrow">
             <p class="category-title">{{ categoryName }}</p>
             <p class="right-arrow">→</p>
           </div>
+          <!-- 商品数量 -->
           <p class="category-count">{{ products.length }} Items</p>
         </div>
       </div>
 
-      <!-- ============ 轮播图 ============ -->
+      <!-- ==================== 轮播图 ==================== -->
       <Carousel
         :slides="carouselData"
         :duration="3000"
         :speed="1000"
       />
 
-      <!-- ============ 推荐产品区域 ============ -->
+      <!-- ==================== 推荐产品区域 ==================== -->
       <div class="product-recommendations">
         <h1>Recommended products</h1>
         <div class="recommended-grid">
@@ -151,39 +160,43 @@
 </template>
 
 <script setup lang="ts">
+  /* 用 composable 统一管理数据请求；
+    通过 hover 状态和图片标准化实现复杂交互;
+    把业务逻辑（畅销、推荐、分类）全部用 computed 解耦，页面只负责展示;
+   */
+  // 引入依赖
   import { ref, onMounted, computed } from 'vue'
   import { useRouter } from 'vue-router'
 
+  // 组件与 composable 引入
   import NavBar from '@/components/NavBar.vue'
   import Carousel from '@/components/Carousel/Carousel.vue'
   import SustainableCraftsmanshipCard from '@/components/CorporationMission/SustainableCraftsmanshipCard.vue'
   import InteractiveCard from '@/components/CorporationMission/InteractiveCard.vue'
   import ProductCard from '@/components/ProductCard.vue'
-
-  import type { Product } from '@/types/frontend/product'
   import { useHomeData } from '@/composables/useHomeData'
+
+  import type { Product } from '@/types'
 
   const router = useRouter()
 
-  /* ==================== composable ==================== */
+  // composable 返回的数据
   const {
-    productsByCategory,
-    products,
+    productsByCategory, // 按分类分组的产品
+    products, // 所有产品的扁平列表
+    // CMS 内容
     commitments,
     cardsData,
     carouselData,
     recommendedProducts,
-    load,
+    load, // 统一加载首页数据的方法
   } = useHomeData()
-
-  // ==================== 响应式变量 ====================
-
-  const productHoverStates = ref<Record<number, boolean>>({})
 
   // 分类
   const categoryList = computed(() => productsByCategory.value)
 
-  // ==================== 悬停处理 ====================
+  // ==================== 悬停状态管理（图片切换核心） ====================
+  const productHoverStates = ref<Record<number, boolean>>({})
   const handleProductHover = (id: number) => {
     productHoverStates.value[id] = true
   }
@@ -191,17 +204,20 @@
     productHoverStates.value[id] = false
   }
 
-  // 图片标准化
+  // 图片标准化处理
   const normalizeImages = (product: Product): string[] => {
     const base = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '')
     const images: string[] = []
 
+    // 封面图
     if (product.cover)
       images.push(
         product.cover.startsWith('http')
           ? product.cover
           : `${base}${product.cover}`
       )
+
+    // 款式图
     if (product.variants?.length) {
       product.variants.forEach((v) => {
         if (v.style_image)
@@ -212,6 +228,8 @@
           )
       })
     }
+
+    // 详情图
     if (product.detail_images?.length) {
       product.detail_images.forEach((img: { image: string }) => {
         if (img.image)
@@ -220,11 +238,13 @@
           )
       })
     }
+
+    // 兜底图
     if (!images.length) images.push('/default-product.png')
     return images
   }
 
-  // 当前展示图片（悬停显示第二张）
+  // 当前展示图片逻辑（hover 切换 悬停显示第二张）
   const getCurrentImage = (product: Product): string => {
     const images = normalizeImages(product)
     const isHovered = !!productHoverStates.value[product.id]
@@ -233,7 +253,15 @@
     return images[1] ?? '/default-product.png'
   }
 
-  // 畅销产品计算
+  // ==================== 获取产品分类封面图 ====================
+  const getCategoryImage = (products: Product[]): string => {
+    const firstImage = products
+      .map((p) => normalizeImages(p)[0])
+      .find((img) => !!img)
+    return firstImage ?? '/default-category.png'
+  }
+
+  // ==================== 畅销产品计算 ====================
   const rightCardsData = computed(() => cardsData.value.slice(1))
   const allProducts = computed(() =>
     Object.values(productsByCategory.value).flatMap((p) => p)
@@ -247,29 +275,6 @@
   const secondAndThirdProducts = computed(() =>
     sortedProducts.value.slice(1, 3)
   )
-
-  // 产品分类
-  const getCategoryImage = (products: Product[]): string => {
-    const firstImage = products
-      .map((p) => normalizeImages(p)[0])
-      .find((img) => !!img)
-    return firstImage ?? '/default-category.png'
-  }
-
-  // ==================== 品牌理念/核心卖点/轮播图片获取第一张图片 ====================
-  const getFirstImage = (images?: any[]) => {
-    if (!images || !images.length) return ''
-
-    const img = images[0]
-
-    // banner / story
-    if (img.image) return img.image
-
-    // feature
-    if (img.icon) return img.icon
-
-    return ''
-  }
 
   // ==================== 跳转到产品分类页 ====================
   const openCategory = (categoryName: string) => {
@@ -292,7 +297,7 @@
     })
   }
 
-  // ==================== 合并 onMounted ====================
+  // ==================== 页面初始化 ====================
   onMounted(async () => {
     try {
       await load()
