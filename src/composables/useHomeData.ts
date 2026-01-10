@@ -36,11 +36,12 @@ export const useHomeData = () => {
 
     const img = images[0]
 
-    // 永远优先使用后端算好的最终 URL
-    if (img.image_url) return img.image_url
+    // banner / story
+    if (img.image) return img.image
 
-    // 兜底（理论上生产不会再用到）
-    if (img.image && img.image.startsWith('http')) return img.image
+    // feature
+    if (img.icon) return img.icon
+
     return ''
   }
   /* ==================== load ==================== */
