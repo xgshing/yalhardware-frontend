@@ -36,7 +36,7 @@ export const useHomeData = () => {
 
     const img = images[0]
 
-    if (img.image) return img.image
+    if (img.image_url) return img.image_url
     return ''
   }
   /* ==================== load ==================== */
