@@ -36,15 +36,13 @@ export const useHomeData = () => {
 
     const img = images[0]
 
-    // banner / story
-    if (img.image) return img.image
+    // 永远优先使用后端算好的最终 URL
+    if (img.image_url) return img.image_url
 
-    // feature
-    if (img.icon) return img.icon
-
+    // 兜底（理论上生产不会再用到）
+    if (img.image && img.image.startsWith('http')) return img.image
     return ''
   }
-  /* ==================== load ==================== */
   /* ==================== load ==================== */
   const load = async (): Promise<HomeData> => {
     try {
