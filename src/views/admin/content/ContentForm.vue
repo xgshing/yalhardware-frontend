@@ -33,7 +33,7 @@
 
   interface ImageItem {
     id: number
-    image_url: string
+    image: string
   }
 
   const props = defineProps<{
@@ -80,20 +80,14 @@
       return { type: 'textarea', placeholder: field.label }
 
     if (field.type === 'image') {
-      const urls = (props.existingImages ?? []).map((i) => i.image_url)
-      console.log(
-        '[DEBUG][ContentForm] existingImages passed to ImageUpload',
-        urls
-      )
+      const images = (props.existingImages ?? []).map((i) => i.image)
+
       return {
         multiple: field.multiple ?? false,
-        existingImages: urls,
+        existingImages: images,
         'onRemove-remote': (url: string) => {
-          const item = (props.existingImages ?? []).find(
-            (i) => i.image_url === url
-          )
-          if (item) {
-            console.log('[DEBUG][ContentForm] remove-remote emitted', item.id)
+          const item = (props.existingImages ?? []).find((i) => i.image === url)
+          if (item?.id) {
             emit('remove-remote', item.id)
           }
         },

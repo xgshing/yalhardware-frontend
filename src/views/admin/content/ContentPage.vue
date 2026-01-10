@@ -33,8 +33,8 @@
           <template #default="{ row }">
             <img
               v-for="img in getRowImages(row)"
-              :key="img.id || img.image_url || img"
-              :src="img.image_url || img"
+              :key="img.id ?? img.image"
+              :src="img.image"
               class="preview-img"
             />
           </template>
@@ -120,15 +120,25 @@
   const visible = ref(false)
   const currentId = ref<number | null>(null)
   const form = ref<Record<string, any>>({})
-  const existingImages = ref<{ id: number; image_url: string }[]>([])
+  const existingImages = ref<{ id: number; image: string }[]>([])
 
   const formKey = ref(0)
 
   // 获取表格显示图片
   function getRowImages(row: any) {
-    if (row.images) return row.images
-    if (row.icon)
-      return Array.isArray(row.icon) ? row.icon : [{ image_url: row.icon }]
+    if (Array.isArray(row.images)) {
+      return row.images.map((i: any) => ({
+        id: i.id,
+        image: i.image,
+      }))
+    }
+
+    if (row.icon) {
+      return Array.isArray(row.icon)
+        ? row.icon.map((i: any) => ({ id: i.id, image: i.image || i }))
+        : [{ image: row.icon }]
+    }
+
     return []
   }
 
@@ -169,7 +179,7 @@
     )
     existingImages.value = getRowImages(row).map((i: any) => ({
       id: i.id,
-      image_url: i.image_url,
+      image: i.image,
     }))
     formKey.value++ // 🔥强制刷新 ContentForm
     console.log('[DEBUG] openEdit existingImages=', existingImages.value)
