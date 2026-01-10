@@ -36,12 +36,7 @@ export const useHomeData = () => {
 
     const img = images[0]
 
-    // banner / story
     if (img.image) return img.image
-
-    // feature
-    if (img.icon) return img.icon
-
     return ''
   }
   /* ==================== load ==================== */
