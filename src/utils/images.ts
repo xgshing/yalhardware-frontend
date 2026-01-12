@@ -33,3 +33,15 @@ export function getPrimaryImage(product: Product): string {
   // 4️⃣ 都没有，返回空字符串（由 ProductCard 兜底）
   return ''
 }
+
+export function normalizeProduct(product: Product): Product {
+  // 从 casetype 中提取所有图片
+  const casetypeImages = product.casetype?.flatMap((C) => C.images ?? []) ?? []
+
+  // 从 casetype 中提取所有图片
+  const detailImages = product.detailImages ?? []
+  return {
+    ...product,
+    allImages: [...casetypeImages, ...detailImages],
+  }
+}
