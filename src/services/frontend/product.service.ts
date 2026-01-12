@@ -2,6 +2,7 @@
 // 前台展示，只读业务层
 
 import { frontendProductApi } from '@/api'
+import { normalizeProduct } from '@/utils/images'
 import type { Product, CategoryProducts } from '@/types/frontend/product'
 
 /**
@@ -10,34 +11,20 @@ import type { Product, CategoryProducts } from '@/types/frontend/product'
  * - 合并图片字段 allImages
  */
 export async function fetchAllProducts(): Promise<Product[]> {
+  // 调用前端产品 API，获取产品列表响应
   const res = await frontendProductApi.list()
-
-  return res.data.map((product) => {
-    const casetypeImages =
-      product.casetype?.flatMap((c) => c.images || []) ?? []
-    const detailImages = product.detailImages ?? []
-
-    return {
-      ...product,
-      allImages: [...casetypeImages, ...detailImages],
-    }
-  })
+  // 对接口返回的产品数组进行处理
+  return res.data.map(normalizeProduct)
 }
 
 /**
- * 获取单个产品详情（前台）
+ * 获取单个产品详情
  */
 export async function fetchProductById(id: number): Promise<Product> {
+  // 调用产品详情接口，传入产品 ID
   const res = await frontendProductApi.detail(id)
-  const product = res.data
-
-  const casetypeImages = product.casetype?.flatMap((c) => c.images || []) ?? []
-  const detailImages = product.detailImages ?? []
-
-  return {
-    ...product,
-    allImages: [...casetypeImages, ...detailImages],
-  }
+  // 接口返回的产品数据
+  return normalizeProduct(res.data)
 }
 
 /**
