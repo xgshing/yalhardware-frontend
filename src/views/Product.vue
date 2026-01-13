@@ -1,142 +1,92 @@
-<!-- src/views/Product.vue -->
-<!-- 产品详情页 -->
-<!-- Product.vue - 完整实现说明：
-  从 route.params (category, id) 获取当前产品
-  构建 images 数组：优先 casetype.images，再附加 detailImages
-  支持缩略图切换、左右箭头、触摸滑动、鼠标拖拽
- -->
+<!-- src/views/product/ProductDetail.vue -->
 <template>
-  <!-- 根容器 -->
   <div class="product-container">
-    <!-- 直接使用导航栏组件，不需要传递数据 -->
     <NavBar />
 
-    <!-- ============ 链接导航 ============ -->
+    <!-- ================= 导航 ================= -->
     <nav class="breadcrumb">
-      <!-- Home链接，点击跳转到首页 -->
       <p
         class="nav-link"
         @click="goToHome"
       >
         Home
       </p>
-      <p class="separator"></p>
       <!-- 分隔符 -->
+      <p class="separator"></p>
       <p
         class="nav-link"
         @click="goToCategory"
       >
         {{ category }}
       </p>
-      <!-- 分类链接，点击跳转到对应分类页 -->
       <p class="separator"></p>
       <p class="current">{{ productName }}</p>
-      <!-- 当前产品名称 -->
     </nav>
 
-    <!-- ============ 产品图片展示（左）+产品介绍及下单（右） ============ -->
+    <!-- ================= 产品主区域 ================= -->
     <div class="product-details">
-      <!-- ============ 产品图片展示（左） ============ -->
-      <!-- 产品图片展示 LEFT: 图片展示区（占 50%） -->
+      <!-- ========== 产品图片展示区 ========= -->
       <div class="product-gallery">
-        <!-- 主图区域 -->
-        <!--
-          Swiper 主容器 - 核心轮播组件
-          关键配置说明： 
-          :modules="modules" - 绑定Swiper功能模块数组
-          :space-between="0" - 幻灯片间距为0，确保图片无缝衔接
-          :navigation="true" - 启用左右导航箭头按钮，用户可以点击切换
-          :pagination="{ clickable: true }" - 启用底部小圆点分页器，可点击跳转
-          :loop="false" - 禁用无限循环模式，幻灯片到末尾后停止
-          :effect="'fade'" - 切换效果为淡入淡出，提升视觉体验
-          @swiper="onMainSwiper" - Swiper实例初始化完成时触发的事件
-          @slide-change="onMainSlideChange" - 幻灯片切换动画完成时触发的事件
-          @mousedown="handleMouseDown" - 监听鼠标按下事件，用于检测拖拽开始
-          :style="{ cursor: currentCursor }" - 动态绑定光标样式
-        -->
+        <!-- 主轮播图：显示大图，支持导航和分页 
+         navigation 左右箭头导航 
+         pagination 可点击的分页点
+         effect="fade"切换效果：淡入淡出
+         -->
         <Swiper
           :modules="modules"
-          :space-between="0"
           :navigation="true"
           :pagination="{ clickable: true }"
-          :loop="false"
-          :effect="'fade'"
-          @swiper="onMainSwiper"
-          @slide-change="onMainSlideChange"
+          effect="fade"
           class="main-swiper"
-          @mousedown="handleMouseDown"
-          :style="{ cursor: currentCursor }"
+          @swiper="onMainSwiper"
+          @slide-change="handleSlideChange"
         >
-          <!-- 
-            使用 v-for 遍历图片数组生成所有幻灯片
-            :key="index" - Vue 列表渲染必需的唯一标识，基于数组索引
-            v-for="(image, index) in images" - 遍历images数组，image为图片URL，index为索引
-          -->
+          <!-- 遍历所有产品图片 
+           loading="lazy" 懒加载
+           -->
           <SwiperSlide
-            v-for="(image, index) in images"
-            :key="index"
+            v-for="(img, i) in images"
+            :key="i"
           >
-            <div class="main-image-container">
-              <!-- 
-                主图图片元素
-                :src="image" - 动态绑定图片源URL
-                loading="lazy" - 启用延迟加载优化性能
-              -->
-              <img
-                :src="image"
-                class="main-image"
-                loading="lazy"
-                @click="openLightbox"
-              />
-            </div>
+            <img
+              :src="img"
+              class="main-image"
+              loading="lazy"
+              @click="openLightbox"
+            />
           </SwiperSlide>
         </Swiper>
 
-        <!-- 缩略图区域 - 展示所有图片的小图，提供快速导航 -->
-        <!-- 
-          缩略图 Swiper 容器
-          关键配置说明：
-          :modules="[FreeMode]" - 只使用自由模式模块
-          :slides-per-view="5" - 默认显示5张缩略图
-          :space-between="10" - 缩略图之间有10px间距
-          :centered-slides="false" - 不居中显示幻灯片
-          :free-mode="true" - 启用自由滚动模式，可任意拖动
-          :watch-slides-progress="true" - 监听幻灯片滚动进度
-          :breakpoints="thumbnailBreakpoints" - 响应式断点配置
-          @swiper="onThumbSwiper" - 缩略图Swiper实例初始化事件
+        <!-- 缩略图轮播：自由模式，可滑动选择 
+        slides-per-view="5"同时显示5个缩略图
+        space-between="12"缩略图间距 
+        free-mode自由滑动模式
+        watch-slides-progress监听幻灯片进度
         -->
         <Swiper
           :modules="[FreeMode]"
           :slides-per-view="5"
-          :space-between="10"
-          :centered-slides="false"
-          :free-mode="true"
-          :watch-slides-progress="true"
-          :breakpoints="thumbnailBreakpoints"
-          @swiper="onThumbSwiper"
+          :space-between="12"
+          free-mode
+          watch-slides-progress
           class="thumbnail-swiper"
+          @swiper="onThumbSwiper"
         >
-          <!-- 
-            缩略图幻灯片
-            v-for="(image, index) in images" - 遍历图片数组
-            :key="index" - 使用索引作为唯一key
-            :class="{ active: activeIndex === index }" - 动态类绑定：当前激活的缩略图高亮显示
-            @click="onThumbClick(index)" - 点击事件：点击缩略图切换到对应主图
+          <!-- 缩略图列表 
+          @click="syncToIndex(i)"点击缩略图同步主图 
+          class="{ active: activeIndex === i }高亮当前激活的缩略图
           -->
           <SwiperSlide
-            v-for="(image, index) in images"
-            :key="index"
-            @click="onThumbClick(index)"
+            v-for="(img, i) in images"
+            :key="i"
+            @click="syncToIndex(i)"
           >
-            <!-- 缩略图容器 -->
             <div
               class="thumbnail-container"
-              :class="{ active: activeIndex === index }"
+              :class="{ active: activeIndex === i }"
             >
-              <!-- 缩略图图片 -->
               <img
-                :src="image"
-                :alt="`缩略图 ${index + 1}`"
+                :src="img"
                 class="thumbnail-image"
                 loading="lazy"
               />
@@ -145,14 +95,10 @@
         </Swiper>
       </div>
 
-      <!-- == Lightbox (vue-easy-lightbox)图片查看器(预览大图功能) ==  -->
-      <!-- 
-        vue-easy-lightbox组件配置：
-        :visible="lightboxVisible" - 控制查看器显示/隐藏的布尔值
-        :imgs="images" - 要显示的所有图片数组
-        :index="currentIndex" - 当前显示的图片索引
-        @hide="lightboxVisible = false" - 隐藏查看器时触发的事件
-      -->
+      <!-- 灯箱/大图预览组件 
+       visible="lightboxVisible"控制显示/隐藏
+       imgs="images"图片列表
+       -->
       <vue-easy-lightbox
         :visible="lightboxVisible"
         :imgs="images"
@@ -160,331 +106,192 @@
         @hide="lightboxVisible = false"
       />
 
-      <!-- ============ 产品介绍及下单（右） ============ -->
-      <!-- 产品下单信息（占 50%） -->
+      <!-- ========== 产品信息区 ========= -->
       <div class="product-info">
         <h1>{{ productName }}</h1>
-        <p class="price">{{ productData?.price }}</p>
+        <p class="price">${{ productData?.price }}</p>
         <p class="shipping">Shipping calculated at checkout.</p>
         <p class="reviews">{{ productData?.reviews }}</p>
 
         <!-- 产品选择容器（颜色选择+数量选择） -->
         <div class="product-choose-container">
-          <!-- Case type（标签）-->
+          <!-- 颜色/款式选择 -->
           <div class="case-type">
             <div class="type-title">Case Color:</div>
-            <!-- 
-              遍历产品规格选项，动态生成可选择的标签
-              productData?.casetype || [] - 安全访问，如果casetype不存在则使用空数组
-              v-for="(c, idx) in ..." - 遍历每个规格选项
-              :key="c.id" - 使用规格的唯一ID作为Vue的key
-            -->
+            <!-- 遍历产品款式（如不同颜色） -->
             <div
-              v-for="(c, idx) in productData?.variants || []"
-              :key="c.id"
+              v-for="(v, i) in productData?.variants || []"
+              :key="v.id"
               class="case-chip"
-              :class="{ selected: selectedCaseIndex === idx }"
-              @mouseenter="hoverCase = idx"
-              @mouseleave="hoverCase = -1"
-              @click="selectCase(idx)"
+              :class="{ selected: selectedCaseIndex === i }"
+              @click="handleSelectCase(i)"
             >
-              {{ c.style_name }}
+              {{ v.style_name }}
             </div>
           </div>
 
-          <!-- 数量 + 加入购物车 -->
+          <!-- 数量选择器 -->
           <div class="order-row">
             <div class="quantity-title">Quantity:</div>
-            <!-- 数量控制器 -->
             <div class="quantity">
-              <!-- 减少数量按钮 -->
-              <button @click="decrease">-</button>
+              <button @click="quantity > 1 && quantity--">-</button>
               <!-- 
-                数量输入框
-                :value="quantity" - 绑定数量值
-                @input="normalizeQuantity" - 输入事件处理
-                min="1" - 最小数量为1
-              -->
+              数量输入框，限制最小值为1 
+              v-model.number="quantity".number修饰符确保数值类型
+               -->
               <input
                 type="number"
-                :value="quantity"
-                @input="normalizeQuantity"
+                v-model.number="quantity"
                 min="1"
               />
-              <!-- 增加数量按钮 -->
-              <button @click="increase">+</button>
+              <button @click="quantity++">+</button>
             </div>
           </div>
         </div>
 
-        <!-- 传递购物车数据到Drawer组件 -->
+        <!-- 操作按钮区域 -->
         <div class="actions">
-          <!-- 加入购物车按钮 -->
           <button
-            @click="addToCartAndOpenDrawer"
             class="add-to-cart"
+            @click="handleAddToCart"
           >
             Add to Cart
           </button>
-          <!-- 立即购买按钮 -->
           <button class="buy-now">Buy it now</button>
         </div>
 
-        <!-- ============ Accordion 折叠面板描述区域 ============ -->
-        <div class="accordion">
-          <!-- 
-            遍历accordionItems数组生成折叠面板
-            v-for="(item, index) in accordionItems" - 遍历折叠面板项
-            :key="index" - 使用索引作为key
-            @click="toggleAccordion(index)" - 点击切换展开/收起状态
-          -->
+        <!-- 折叠面板（产品详情、规格等） -->
+        <ul class="accordion">
+          <!-- 遍历折叠面板项 -->
           <li
-            v-for="(item, index) in accordionItems"
-            :key="index"
+            v-for="(item, i) in accordionItems"
+            :key="i"
             class="accordion-container"
           >
-            <!-- 折叠面板项头部 -->
+            <!-- 折叠面板标题区域 -->
             <div
               class="accordion-item"
-              @click="toggleAccordion(index)"
+              @click="toggleAccordion(i)"
             >
               <p class="item-title">{{ item.title }}</p>
-              <!-- 展开/收起箭头 -->
-              <span class="arrow">{{ item.isOpen ? '↑' : '↓' }}</span>
+              <span>{{ item.isOpen ? '↑' : '↓' }}</span>
             </div>
-            <!-- 折叠面板内容区域 -->
             <div
               v-show="item.isOpen"
               class="accordion-body"
             >
-              <p>{{ getAccordionContent(item) }}</p>
+              {{ getAccordionContent(item) }}
             </div>
           </li>
-        </div>
+        </ul>
       </div>
     </div>
 
-    <!-- ============ 展示与该产品相同种类的其它产品 ============ -->
-    <!-- 使用相似产品组件 -->
+    <!-- 相似产品推荐区域 -->
     <SimilarProducts
       :products="similarProducts"
       title="You May Also Like"
       subtitle="Featured Items"
-      view-text="View Collection"
       @product-click="handleProductClick"
-      @view-collection="handleViewCollection"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-  import {
-    ref,
-    computed,
-    onMounted,
-    watch,
-    nextTick,
-    onBeforeUnmount,
-  } from 'vue'
-  import { useRoute, useRouter } from 'vue-router'
+  /* ================= 核心依赖 ================= */
+  import { ref, onMounted } from 'vue'
+  import { useRouter } from 'vue-router'
 
-  /* ================= 组件 ================= */
+  /* ================= 组件导入 ================= */
   import NavBar from '@/components/NavBar.vue'
   import SimilarProducts from '@/components/SimilarProducts.vue'
   import VueEasyLightbox from 'vue-easy-lightbox'
 
-  import { useCartStore } from '@/stores/cart'
-  /* ================= Swiper ================= */
+  /* ================= Swiper轮播相关 ================= */
   import { Swiper, SwiperSlide } from 'swiper/vue'
-  import type { Swiper as SwiperType } from 'swiper/types'
   import { Navigation, Pagination, FreeMode } from 'swiper/modules'
-
   import 'swiper/css'
   import 'swiper/css/navigation'
   import 'swiper/css/pagination'
   import 'swiper/css/free-mode'
-  import 'swiper/css/effect-fade'
 
-  /* ================= 数据接口 ================= */
+  /* ================= 组合式函数导入 ================= */
+  import { useProduct } from '@/composables/product/useProduct'
+  import { useProductGallery } from '@/composables/product/useProductGallery'
+  import { useProductVariants } from '@/composables/product/useProductVariants'
+  import { useProductCart } from '@/composables/product/useProductCart'
+  import { useAccordion } from '@/composables/product/useAccordion'
+
+  /* ================= API服务 ================= */
   import { frontendService } from '@/services'
 
-  import type { Product } from '@/types/frontend/product'
-
-  /* ================= 路由 ================= */
-  const route = useRoute()
+  /* ================= 初始化 ================= */
   const router = useRouter()
+  const modules = [Navigation, Pagination] // Swiper模块配置
 
-  const category = computed(() => {
-    const cat = route.params.category
-    return typeof cat === 'string' ? cat : '所有产品'
-  })
+  /* 产品数据逻辑 */
+  const {
+    productData, // 产品数据
+    images, // 产品图片数组
+    productName, // 产品名称
+    category, // 产品分类
+    similarProducts, // 相似产品列表
+    categoryProductsMap, // 分类产品映射
+  } = useProduct()
 
-  const productId = computed(() => Number(route.params.id))
+  /* 图片展示逻辑 */
+  const {
+    mainSwiper, // 主轮播图实例
+    activeIndex, // 当前激活的图片索引
+    lightboxVisible, // 灯箱显示状态
+    onMainSwiper, // 主轮播图初始化回调
+    onThumbSwiper, // 缩略图轮播初始化回调
+    openLightbox, // 打开灯箱方法
+    syncToIndex, // 同步到指定索引方法
+  } = useProductGallery()
 
-  /* ================= Swiper ================= */
-  const modules = [Navigation, Pagination]
+  /* 产品款式逻辑 */
+  const { selectedCaseIndex, selectCase, syncByImageIndex } =
+    useProductVariants(() => productData.value) // 传入产品数据获取函数
 
-  const mainSwiper = ref<SwiperType | null>(null)
-  const thumbSwiper = ref<SwiperType | null>(null)
+  /* 购物车逻辑 */
+  const { addToCart } = useProductCart()
 
-  const activeIndex = ref(0)
-  const currentCursor = ref('zoom-in')
+  /* 折叠面板逻辑 */
+  const { accordionItems, toggleAccordion, getAccordionContent } =
+    useAccordion(productData) // 传入产品数据
 
-  const thumbnailBreakpoints = {
-    320: { slidesPerView: 3, spaceBetween: 8 },
-    768: { slidesPerView: 4, spaceBetween: 10 },
-    1024: { slidesPerView: 5, spaceBetween: 18 },
+  /* 购买数量 */
+  const quantity = ref(1) // 默认数量为1
+
+  /* ================= 事件处理函数 ================= */
+  /**
+   * 处理主轮播图幻灯片切换
+   */
+  const handleSlideChange = () => {
+    const index = mainSwiper.value?.realIndex ?? 0 // 获取当前真实索引
+    syncToIndex(index) // 同步图片展示索引
+    syncByImageIndex(index) // 同步款式选择
   }
 
-  /* ================= 产品数据 ================= */
-  const productData = ref<Product | null>(null)
-  const images = ref<string[]>([])
-
-  const cartStore = useCartStore()
-  /* ================= Lightbox ================= */
-  const lightboxVisible = ref(false)
-  const currentIndex = ref(0)
-
-  const openLightbox = () => {
-    lightboxVisible.value = true
+  /**
+   * 处理颜色/款式选择
+   * @param index - 选中的款式索引
+   */
+  const handleSelectCase = (index: number) => {
+    selectCase(index) // 选择款式
+    syncToIndex(index) // 同步图片到对应索引
   }
 
-  /* ================= Case ================= */
-  const selectedCaseIndex = ref(-1)
-  const hoverCase = ref(-1)
-
-  /* ================= 数量 ================= */
-  const quantity = ref(1)
-  const increase = () => quantity.value++
-  const decrease = () => quantity.value > 1 && quantity.value--
-  const normalizeQuantity = () => {
-    if (!Number.isFinite(quantity.value) || quantity.value < 1) {
-      quantity.value = 1
-    }
+  /**
+   * 处理加入购物车
+   */
+  const handleAddToCart = () => {
+    if (!productData.value) return // 产品数据不存在时返回
+    addToCart(productData.value, quantity.value, selectedCaseIndex.value)
   }
 
-  /* ================= Accordion ================= */
-  interface AccordionItem {
-    title: string
-    isOpen: boolean
-  }
-
-  const accordionItems = ref<AccordionItem[]>([
-    { title: 'Description', isOpen: true },
-    { title: 'Specifications', isOpen: true },
-    { title: 'Free shipping and Returns', isOpen: true },
-  ])
-
-  const toggleAccordion = (index: number) => {
-    const item = accordionItems.value[index]
-    if (!item) return
-    item.isOpen = !item.isOpen
-  }
-
-  const getAccordionContent = (item: AccordionItem) => {
-    const title = item.title.toLowerCase()
-
-    if (title.includes('free shipping')) {
-      return 'Usually ships the same day. Free shipping on orders over $50 in the US and $120 overseas. Returns accepted for 30 days.'
-    }
-
-    if (title.includes('description')) {
-      return productData.value?.description || '暂无描述'
-    }
-
-    if (title.includes('specifications')) {
-      return productData.value?.specifications || '暂无规格'
-    }
-
-    return ''
-  }
-
-  /* ================= 加载产品 ================= */
-  const loadProduct = async () => {
-    const id = productId.value
-    if (!id) return
-
-    const product = await frontendService.fetchProductById(id)
-    productData.value = product
-
-    /* ===== 图片优先级：variants.style_image → detail_images.image ===== */
-    const imgs: string[] = []
-
-    // 1️⃣ 所有 variants 的款式图
-    if (Array.isArray(product.variants)) {
-      product.variants.forEach((v) => {
-        if (v.style_image) imgs.push(v.style_image)
-      })
-    }
-
-    // 2️⃣ 所有详情图
-    if (Array.isArray(product.detail_images)) {
-      product.detail_images.forEach((img) => {
-        if (img.image) imgs.push(img.image)
-      })
-    }
-
-    // 去重（防止相同图片）
-    images.value = Array.from(new Set(imgs))
-
-    if (images.value.length === 0) {
-      images.value = ['https://via.placeholder.com/600x600?text=No+Image']
-    }
-
-    activeIndex.value = 0
-    selectedCaseIndex.value = -1
-  }
-
-  /* ================= 产品名称 ================= */
-  const productName = computed(() => {
-    return productData.value?.name ?? 'Product'
-  })
-  /* ================= 购物车 ================= */
-  const addToCartAndOpenDrawer = () => {
-    if (!productData.value) return
-
-    const selectedVariant =
-      productData.value.variants?.[selectedCaseIndex.value]
-
-    const selectedCaseText = selectedVariant?.style_name ?? 'Default'
-
-    const selectedImage =
-      selectedVariant?.style_image ||
-      productData.value.detail_images?.[0]?.image ||
-      ''
-
-    cartStore.addItem({
-      id: productData.value.id,
-      name: productData.value.name,
-      price: productData.value.price,
-      unitPrice: productData.value.price,
-      caseType: selectedCaseText,
-      image: selectedImage,
-      quantity: quantity.value,
-    })
-
-    cartStore.openDrawer()
-  }
-
-  /* ================= Case 点击 ================= */
-  const selectCase = (idx: number) => {
-    selectedCaseIndex.value = idx
-    // 主图切换到对应款式图
-    mainSwiper.value?.slideTo(idx)
-
-    // 同步激活状态
-    activeIndex.value = idx
-  }
-
-  /* ================= 相似产品 ================= */
-  const categoryProductsMap = ref<Record<string, Product[]>>({})
-
-  const similarProducts = computed(() => {
-    const list = categoryProductsMap.value[category.value] || []
-    return list.filter((p) => p.id !== productData.value?.id)
-  })
-
-  /* ================= 导航 ================= */
+  /* ================= 路由导航 ================= */
   const goToHome = () => router.push({ name: 'home' })
   const goToCategory = () =>
     router.push({
@@ -492,79 +299,22 @@
       query: { category: category.value },
     })
 
-  const handleProductClick = (p: Product) => {
+  /**
+   * 处理相似产品点击
+   * @param p - 点击的产品对象
+   */
+  const handleProductClick = (p: any) => {
     router.push({
       name: 'product-detail',
-      params: { category: category.value, id: p.id },
+      params: { category: category.value, id: p.id }, // 传递分类和产品ID
     })
   }
 
-  const handleViewCollection = () => {
-    router.push({
-      name: 'ProductCategories',
-      query: { category: category.value },
-    })
-  }
-
-  /* ================= Swiper ================= */
-  const onMainSwiper = (swiper: SwiperType) => {
-    mainSwiper.value = swiper
-  }
-
-  const onThumbSwiper = (swiper: SwiperType) => {
-    thumbSwiper.value = swiper
-  }
-
-  const onMainSlideChange = () => {
-    if (!mainSwiper.value) return
-
-    const index = mainSwiper.value.realIndex
-    activeIndex.value = index
-
-    // 同步缩略图
-    thumbSwiper.value?.slideTo(index)
-
-    // 🔑 Case 联动逻辑
-    const variantsCount = productData.value?.variants?.length ?? 0
-
-    if (index < variantsCount) {
-      // 当前是某个 Case 的图片
-      selectedCaseIndex.value = index
-    } else {
-      // 当前不是 Case 图片 → 取消选中
-      selectedCaseIndex.value = -1
-    }
-  }
-
-  const onThumbClick = (index: number) => {
-    mainSwiper.value?.slideTo(index)
-    activeIndex.value = index
-  }
-
-  const handleMouseDown = (e: MouseEvent) => {
-    if (e.button !== 0) return
-    currentCursor.value = 'grabbing'
-    document.addEventListener(
-      'mouseup',
-      () => (currentCursor.value = 'zoom-in'),
-      { once: true }
-    )
-  }
-
-  /* ================= 生命周期 ================= */
+  /* ================= 组件挂载初始化 ================= */
   onMounted(async () => {
-    await loadProduct()
+    // 加载分类产品数据
     categoryProductsMap.value = await frontendService.fetchCategoryProducts()
   })
-
-  watch(
-    () => route.params.id,
-    async () => {
-      await loadProduct()
-    }
-  )
-
-  onBeforeUnmount(() => {})
 </script>
 
 <style scoped>
@@ -1019,7 +769,7 @@
 
   /* 折叠面板内容区域样式 */
   .accordion-body {
-    padding: 0 30px;
+    padding: 10px 30px;
     color: #666;
     line-height: 1.6;
   }
