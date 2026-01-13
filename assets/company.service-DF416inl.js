@@ -1,1 +1,0 @@
-import{Y as o}from"./index-Ll_QVkpE.js";const r={getProfile:()=>o.get("/company/profile/"),saveProfile:a=>o.post("/company/profile/",a),uploadRichImage:a=>o.post("/upload/rich-image/",a)},t=async()=>(await r.getProfile()).data||{},n=async a=>await r.saveProfile(a),i=a=>{const e=new FormData;return e.append("image",a),r.uploadRichImage(e)};export{t as g,n as s,i as u};
