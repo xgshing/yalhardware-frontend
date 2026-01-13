@@ -1,5 +1,4 @@
-/* src/stores/cart.ts */
-/* 购物车状态管理文件 */
+/* 购物车状态管理文件(把跨页面、跨组件共享的数据放到 Pinia) */
 // src/stores/cart.ts
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'

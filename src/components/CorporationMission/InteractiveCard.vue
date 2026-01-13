@@ -61,8 +61,6 @@
 </template>
 
 <script setup lang="ts">
-  import { computed } from 'vue'
-
   // ============= 组件Props类型定义 =============
   interface Props {
     id: number // 卡片唯一标识
@@ -83,17 +81,6 @@
   const props = defineProps<Props>()
   // 定义组件事件
   const emit = defineEmits<Emits>()
-
-  // ============= 计算属性 =============
-  /**
-   * 图标URL计算属性
-   * 根据卡片ID生成不同的图标
-   * 实际项目中应替换为真实图标URL
-   */
-  const iconImageUrl = computed(() => {
-    // 使用DiceBear API生成示例图标
-    return `https://api.dicebear.com/7.x/icons/svg?seed=${props.id}`
-  })
 </script>
 
 <style lang="scss" scoped>

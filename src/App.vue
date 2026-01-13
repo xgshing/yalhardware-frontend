@@ -3,8 +3,6 @@
   import { onMounted } from 'vue'
   import { RouterView } from 'vue-router'
   import Drawer from '@/components/Drawer.vue'
-  import { useCartStore } from '@/stores/cart'
-  const cartStore = useCartStore()
 
   onMounted(() => {
     // 检查 DOM

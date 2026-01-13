@@ -5,6 +5,11 @@ export interface CaseType {
   images?: string[] // ⭐ 改为数组，可选
 }
 
+export interface DetailImage {
+  id?: number
+  image: string
+}
+
 export interface Variant {
   id?: number
   uid: number
@@ -21,7 +26,7 @@ export interface Product {
   name: string
   cover?: string
   images?: ProductImage[]
-  variants?: Variant[]
+  variants: Variant[]
   is_featured?: boolean
   featured_order: number
 
@@ -33,13 +38,14 @@ export interface Product {
   salesVolume?: number
   casetype?: CaseType[]
   detailImages?: string[]
+  detail_images?: DetailImage[]
   category?: {
     // ✅ 改成对象
     id: number
     name: string
     parent?: number | null
   } | null
-  allImages?: string[]
+  allImages: string[]
   [key: string]: any // ⭐ 允许额外字段
 }
 
