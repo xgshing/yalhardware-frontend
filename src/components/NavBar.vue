@@ -1,4 +1,5 @@
 <!-- src/components/NavBar.vue -->
+<!-- src/components/NavBar.vue -->
 <template>
   <div>
     <header :class="['header', { 'header-hidden': !isNavVisible }]">
@@ -144,7 +145,7 @@
   import { fetchCategoryTree, logoutUser } from '@/services'
   import { useCartStore } from '@/stores/cart'
   import { useUserStore } from '@/stores/user'
-  import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
+  import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
   import { useRouter } from 'vue-router'
 
   const router = useRouter()
@@ -180,11 +181,11 @@
     router.push({ name: 'cart', query: { purpose: 'Your Shopping Cart' } })
 
   // ================== 用户 ==================
-  const userStore = useUserStore() // ✅ Pinia store
+  const userStore = useUserStore()
 
   // computed
   const isLoggedIn = computed(() => !!userStore.user)
-  const userFullName = computed(() => userStore.fullName) // 直接使用 store 的 getter
+  const userFullName = computed(() => userStore.fullName)
 
   // 下拉状态
   const isOpen = ref(false)
@@ -193,12 +194,22 @@
   }
 
   // ================== 导航跳转 ==================
-  const handleLogin = () =>
+  const handleLogin = () => {
     router.push({ name: 'login', query: { purpose: 'Login' } })
-  const handleCreateAccount = () =>
+    isOpen.value = false
+  }
+  const handleCreateAccount = () => {
     router.push({ name: 'register', query: { purpose: 'Create Account' } })
-  const goProfile = () => router.push({ name: 'profile' })
-  const gooders = () => router.push({ name: 'order-list' })
+    isOpen.value = false
+  }
+  const goProfile = () => {
+    router.push({ name: 'profile' })
+    isOpen.value = false
+  }
+  const gooders = () => {
+    router.push({ name: 'order-list' })
+    isOpen.value = false
+  }
   const handleLogout = () => {
     logoutUser()
     userStore.logout()
@@ -229,7 +240,6 @@
     else if (scrollTop < lastScrollTop.value) isNavVisible.value = true
     lastScrollTop.value = scrollTop <= 0 ? 0 : scrollTop
   }
-
   function debounce(func: Function, wait: number) {
     let timeout: number | undefined
     return function executedFunction(...args: any) {
@@ -281,6 +291,13 @@
     const debouncedScroll = debounce(handleScroll, 10)
     window.removeEventListener('scroll', debouncedScroll)
   })
+
+  // ================== watch 用户状态 ==================
+  watch(
+    () => userStore.user,
+    (newVal) => console.log('userStore.user changed:', newVal),
+    { immediate: true }
+  )
 </script>
 
 <style scoped>
