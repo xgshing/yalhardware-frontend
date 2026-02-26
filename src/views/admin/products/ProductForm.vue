@@ -119,7 +119,7 @@
   import { ElMessage } from 'element-plus'
   import ImageUpload from '@/components/ImageUpload.vue'
   import { useCategories } from '@/composables/useCategories'
-  import { adminService } from '@/services'
+  import { fetchCategoryTree } from '@/services'
   import type { ProductCategory } from '@/types/frontend/product'
 
   /* ========== props / emits ========== */
@@ -163,7 +163,7 @@
 
   /* ========== 初始化 ========== */
   onMounted(async () => {
-    categoryTree.value = await adminService.fetchCategoryTree()
+    categoryTree.value = await fetchCategoryTree()
   })
 
   watch(

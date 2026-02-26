@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
 
-import { adminService } from '@/services'
+import { fetchCategoryTree, createCategory } from '@/services'
 import type { ProductCategory } from '@/types/frontend/product'
 
 interface CreateCategoryPayload {
@@ -23,7 +23,7 @@ export function useCategories() {
   const fetchCategories = async () => {
     loading.value = true
     try {
-      categories.value = await adminService.fetchCategoryTree()
+      categories.value = await fetchCategoryTree()
     } catch (e) {
       ElMessage.error('获取分类失败')
     } finally {
@@ -41,7 +41,7 @@ export function useCategories() {
     }
 
     try {
-      const created = await adminService.createCategory(data)
+      const created = await createCategory(data)
 
       // ⚠️ 如果是树结构，真实项目里通常要重新 fetch
       await fetchCategories()

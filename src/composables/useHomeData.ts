@@ -9,7 +9,13 @@ import type {
   HomeData,
 } from '@/types'
 
-import { frontendService, adminService } from '@/services'
+import {
+  fetchCategoryProducts,
+  fetchAllProducts,
+  fetchStories,
+  fetchFeatures,
+  fetchBanners,
+} from '@/services'
 
 export const useHomeData = () => {
   /* ==================== 响应式数据状态定义 ==================== */
@@ -49,11 +55,11 @@ export const useHomeData = () => {
     try {
       const [categoryProducts, allProducts, stories, features, banners] =
         await Promise.all([
-          frontendService.fetchCategoryProducts(),
-          frontendService.fetchAllProducts(),
-          adminService.fetchStories(),
-          adminService.fetchFeatures(),
-          adminService.fetchBanners(),
+          fetchCategoryProducts(),
+          fetchAllProducts(),
+          fetchStories(),
+          fetchFeatures(),
+          fetchBanners(),
         ])
 
       productsByCategory.value = categoryProducts

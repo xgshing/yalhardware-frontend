@@ -1,171 +1,221 @@
 /* 购物车状态管理文件(把跨页面、跨组件共享的数据放到 Pinia) */
 // src/stores/cart.ts
+import type { AddToCartItem, CartItem } from '@/types'
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import type { CartItem } from '@/types/frontend/product'
+import { computed, ref } from 'vue'
 
+// 定义购物车状态存储
 export const useCartStore = defineStore('cart', () => {
+  // ========== 响应式状态 ==========
+  // 购物车商品数组
   const items = ref<CartItem[]>([])
+  // 控制购物车侧边抽屉的显示/隐藏
+  const isDrawerOpen = ref(false)
 
-  // 安全提取价格数字的辅助函数
-  const extractPriceNumber = (priceStr?: string): number => {
-    if (!priceStr) return 0
+  // ========== 计算属性 ==========
+  /**
+   * 计算购物车中所有商品的总数量
+   * @returns 商品总数量
+   */
+  const totalItems = computed(() =>
+    items.value.reduce((sum, i) => sum + i.quantity, 0)
+  )
 
-    // 方法1: 使用更安全的正则匹配
-    const match = priceStr.match(/\$?(\d+(?:\.\d+)?)/)
-    if (!match || !match[1]) return 0
+  const checkedItems = computed(() => items.value.filter((i) => i.checked))
 
-    const price = parseFloat(match[1])
-    return isNaN(price) ? 0 : price
+  /**
+   * 计算购物车小计金额
+   * @returns 格式化后的小计金额（保留两位小数）
+   */
+  const subtotal = computed(
+    () =>
+      checkedItems.value
+        .reduce((sum, i) => sum + i.price * i.quantity, 0)
+        .toFixed(2) //将计算结果保留两位小数
+  )
 
-    // 方法2: 使用更简单的提取方式
-    // const numbers = priceStr.replace(/[^\d.]/g, '')
-    // const price = parseFloat(numbers)
-    // return isNaN(price) ? 0 : price
-  }
-
-  // Getters
-  const totalItems = computed(() => {
-    return items.value.reduce((total, item) => total + item.quantity, 0)
-  })
-
-  const subtotal = computed(() => {
-    return items.value
-      .reduce((total, item) => {
-        const priceNum = extractPriceNumber(item.unitPrice)
-        return total + priceNum * item.quantity
-      }, 0)
-      .toFixed(2)
-  })
-
+  /**
+   * 计算购物车中商品的种类数量
+   * @returns 商品种类数量
+   */
   const itemCount = computed(() => items.value.length)
 
-  // Actions
-  const addItem = (item: Omit<CartItem, 'id'> & { id?: number }) => {
-    const productId = item.id || Date.now()
-    const caseType = item.caseType || 'Default'
-    const image = item.image || 'https://via.placeholder.com/100'
+  const isAllchecked = computed({
+    get() {
+      return items.value.length > 0 && items.value.every((i) => i.checked)
+    },
+    set(val: boolean) {
+      items.value.forEach((i) => (i.checked = val))
+      saveToStorage()
+    },
+  })
 
-    const existingItem = items.value.find(
-      (i) => i.id === productId && i.caseType === caseType
+  // ========== 操作方法 ==========
+  /**
+   * 添加商品到购物车
+   * 如果商品已存在（相同ID和款式），则增加数量
+   * 否则添加新商品项
+   * @param item - 要添加的商品信息
+   */
+  const addItem = (payload: AddToCartItem) => {
+    const existing = items.value.find(
+      (i) =>
+        i.productId === payload.productId && i.variant_id === payload.variant_id
     )
 
-    if (existingItem) {
-      existingItem.quantity += item.quantity
+    if (existing) {
+      existing.quantity += payload.quantity
     } else {
       items.value.push({
-        id: productId,
-        name: item.name,
-        price: item.price,
-        unitPrice: item.unitPrice,
-        caseType,
-        image,
-        quantity: item.quantity,
+        ...payload,
+        checked: true,
       })
     }
 
+    // 保存到本地存储
     saveToStorage()
   }
 
+  /**
+   * 更新商品数量
+   * @param index - 商品在数组中的索引
+   * @param type - 更新类型：增加或减少
+   */
   const updateQuantity = (index: number, type: 'increase' | 'decrease') => {
-    if (index < 0 || index >= items.value.length) return
-
+    // 获取指定索引的商品对象，如不存在则直接返回
     const item = items.value[index]
     if (!item) return
 
-    if (type === 'increase') {
-      item.quantity++
-    } else if (type === 'decrease') {
-      if (item.quantity > 1) {
-        item.quantity--
-      } else {
-        removeItem(index)
-        return
-      }
+    // 根据操作类型处理数量变更
+    if (type === 'increase') item.quantity++
+    else {
+      // 减少数量，当数量为1时移除商品
+      if (item.quantity > 1) item.quantity--
+      else removeItem(index)
     }
-
     saveToStorage()
   }
 
-  const removeItem = (index: number) => {
-    if (index >= 0 && index < items.value.length) {
-      items.value.splice(index, 1)
-      saveToStorage()
-    }
+  const toggleChecked = (index: number) => {
+    const item = items.value[index]
+    if (!item) return
+    item.checked = !item.checked
+    saveToStorage()
   }
 
+  /**
+   * 从购物车移除商品
+   * @param index - 商品在数组中的索引
+   */
+  const removeItem = (index: number) => {
+    // 从数组中删除指定位置的元素(从index位置开始删除1个元素)
+    items.value.splice(index, 1)
+    saveToStorage()
+  }
+
+  const clearCheckedItems = () => {
+    items.value = items.value.filter((i) => !i.checked)
+    saveToStorage()
+  }
+  /**
+   * 清空购物车
+   */
   const clearCart = () => {
     items.value = []
+    // 清除本地存储中的购物车数据
     localStorage.removeItem('cart')
   }
 
-  // 计算单个商品总价
-  const calculateItemTotal = (item: CartItem): string => {
-    const priceNum = extractPriceNumber(item.unitPrice)
-    return (priceNum * item.quantity).toFixed(2)
-  }
+  /**
+   * 计算单个商品的总价
+   * @param item - 购物车商品项
+   * @returns 格式化后的单个商品总价（保留两位小数）
+   */
+  const calculateItemTotal = (item: CartItem) =>
+    (item.price * item.quantity).toFixed(2)
 
-  // localStorage 相关
+  // ================= 下单专用 =================
+  const buildOrderPayload = () => ({
+    items: checkedItems.value.map((i) => ({
+      variant_id: i.variant_id,
+      quantity: i.quantity,
+    })),
+  })
+
+  // ========== 本地存储相关操作 ==========
+  /**
+   * 从本地存储加载购物车数据
+   */
   const loadFromStorage = () => {
-    const saved = localStorage.getItem('cart')
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        if (Array.isArray(parsed)) {
-          items.value = parsed
-        }
-      } catch (error) {
-        console.error('Failed to load cart from storage:', error)
-        items.value = []
+    const raw = localStorage.getItem('cart')
+    if (!raw) return
+
+    try {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) {
+        items.value = parsed.map((i) => ({
+          ...i,
+          checked: i.checked ?? true,
+        }))
       }
+    } catch {
+      items.value = []
     }
   }
 
+  /**
+   * 保存购物车数据到本地存储
+   */
   const saveToStorage = () => {
     localStorage.setItem('cart', JSON.stringify(items.value))
   }
 
-  // 初始化
+  // ========== 初始化 ==========
+  // 应用启动时从本地存储加载购物车数据
   loadFromStorage()
 
-  const isDrawerOpen = ref(false)
+  // ========== 购物车侧边抽屉状态 ==========
 
-  const openDrawer = () => {
-    console.log('cart.ts - openDrawer 被调用')
-    isDrawerOpen.value = true
-    console.log('cart.ts - 当前状态:', isDrawerOpen.value)
-  }
+  /**
+   * 打开购物车侧边抽屉
+   */
+  const openDrawer = () => (isDrawerOpen.value = true)
 
-  const closeDrawer = () => {
-    console.log('cart.ts - closeDrawer 被调用')
-    isDrawerOpen.value = false
-  }
+  /**
+   * 关闭购物车侧边抽屉
+   */
+  const closeDrawer = () => (isDrawerOpen.value = false)
 
-  const toggleDrawer = () => {
-    isDrawerOpen.value = !isDrawerOpen.value
-  }
+  /**
+   * 切换购物车侧边抽屉状态
+   */
+  const toggleDrawer = () => (isDrawerOpen.value = !isDrawerOpen.value)
 
+  // ========== 导出所有状态和方法 ==========
   return {
     // 状态
     items,
+    isDrawerOpen,
 
-    // Getters
+    // 计算属性
     totalItems,
     subtotal,
     itemCount,
+    checkedItems,
+    isAllchecked,
 
-    // Actions
+    // 操作方法
     addItem,
     updateQuantity,
+    toggleChecked,
     removeItem,
+    clearCheckedItems,
     clearCart,
+
     calculateItemTotal,
+    buildOrderPayload,
 
     // 工具方法
-    loadFromStorage,
-    saveToStorage,
-
-    isDrawerOpen,
     openDrawer,
     closeDrawer,
     toggleDrawer,

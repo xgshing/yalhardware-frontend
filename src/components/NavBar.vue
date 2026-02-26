@@ -58,12 +58,13 @@
         <!-- 桌面导航搜索、登录账户、购物车功能 -->
         <div class="nav-right">
           <a class="search"> <span class="rotate-char">⌕</span>Search</a>
+
           <!-- Account 下拉菜单 -->
           <div class="account-dropdown-wrapper">
             <a
               class="account"
               @click="toggleDropdown"
-              >Account</a
+              >{{ isLoggedIn ? userFullName : 'Account' }}</a
             >
 
             <!-- 登录下拉窗 -->
@@ -72,18 +73,43 @@
                 v-if="isOpen"
                 class="account-dropdown"
               >
-                <div
-                  @click="handleLogin"
-                  class="dropdown-item"
-                >
-                  Log In
-                </div>
-                <div
-                  @click="handleCreateAccount"
-                  class="dropdown-item"
-                >
-                  Create Account
-                </div>
+                <!-- 未登录 -->
+                <template v-if="!isLoggedIn">
+                  <div
+                    @click="handleLogin"
+                    class="dropdown-item"
+                  >
+                    Log In
+                  </div>
+                  <div
+                    @click="handleCreateAccount"
+                    class="dropdown-item"
+                  >
+                    Create Account
+                  </div>
+                </template>
+
+                <!-- 已登录 -->
+                <template v-else>
+                  <div
+                    class="dropdown-item"
+                    @click="goProfile"
+                  >
+                    Hello,{{ userFullName }}
+                  </div>
+                  <div
+                    class="dropdown-item"
+                    @click="gooders"
+                  >
+                    My Orders
+                  </div>
+                  <div
+                    class="dropdown-item"
+                    @click="handleLogout"
+                  >
+                    Log Out
+                  </div>
+                </template>
               </div>
             </div>
           </div>
@@ -116,23 +142,39 @@
   </div>
 </template>
 
-<script setup>
-  import { reactive, ref, onMounted, onUnmounted } from 'vue'
+<script setup lang="ts">
+  import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
   import { useRouter } from 'vue-router'
+
+  import { fetchCategoryTree, logoutUser } from '@/services'
   import { useCartStore } from '@/stores/cart'
-  import { adminService } from '@/services'
+  import { useUserStore } from '@/stores/user'
 
   const router = useRouter()
   const logo = reactive({
     text: 'YAL Industrial & Trading',
   })
 
+  // ===================== 导航栏滚动 =====================
   const isNavVisible = ref(true)
   const lastScrollTop = ref(0)
   const hasScrolled = ref(false)
 
-  const menuItems = ref([]) // 菜单数组动态生成
-  const dropdownStates = reactive({}) // 下拉状态
+  // ===================== 菜单 =====================
+  interface SubItem {
+    id: number
+    text: string
+  }
+
+  interface MenuItems {
+    id: number
+    text: string
+    hasDropdown: boolean
+    subItems: SubItem[]
+  }
+
+  const menuItems = ref<MenuItems[]>([]) // 菜单数组动态生成
+  const dropdownStates = reactive<Record<number, boolean>>({}) // 下拉状态
 
   // ===================== 关于公司 =====================
   const openAboutUs = () => {
@@ -148,19 +190,40 @@
   const cartStore = useCartStore()
 
   const openCart = () => {
-    cartStore.openDrawer() // 使用 Store 的方法
+    router.push({
+      name: 'cart',
+      query: {
+        purpose: 'Your Shopping Cart',
+      },
+    })
+  }
+  // ===================== 账户 =====================
+  interface User {
+    isLoggedIn: boolean
+    first_name: string
+    last_name: string
   }
 
-  // ===================== 账户 =====================
+  const userStore = useUserStore()
+
+  // 计算属性：命名
+  const userFullName = computed(() => {
+    if (!userStore.user) return null
+    return `${userStore.user.first_name} ${userStore.user.last_name}`
+  })
+  const isLoggedIn = computed(() => !!userStore.user)
+
   const isOpen = ref(false)
   const toggleDropdown = () => {
     isOpen.value = !isOpen.value
   }
+
+  // ===================== 跳转函数 =====================
   const handleLogin = () => {
     router.push({
       name: 'login',
-      params: {
-        purpose: 'login',
+      query: {
+        purpose: 'Login',
       },
     })
     isOpen.value = false
@@ -169,21 +232,47 @@
   const handleCreateAccount = () => {
     router.push({
       name: 'register',
-      params: {
-        purpose: 'register',
+      query: {
+        purpose: 'Create Account',
       },
     })
     isOpen.value = false
   }
+  const goProfile = () => {
+    router.push({ name: 'profile' })
+    isOpen.value = false
+  }
 
+  const gooders = () => {
+    router.push({ name: 'order-list' })
+    isOpen.value = false
+  }
+
+  const handleLogout = () => {
+    console.log('handleLogout clicked') // 1️⃣ 点击是否触发
+    console.log('Before logout, userStore.user:', userStore.user)
+
+    logoutUser() // 清理 token
+    console.log(
+      'After logoutUser(), localStorage token:',
+      localStorage.getItem('access'),
+      localStorage.getItem('refresh')
+    )
+
+    userStore.logout() // 清空 Pinia 状态
+    console.log('After userStore.logout(), userStore.user:', userStore.user)
+
+    router.push({ name: 'home' })
+    isOpen.value = false
+  }
   // ===================== 获取后台分类 =====================
   async function fetchCategories() {
-    const data = await adminService.fetchCategoryTree()
-    menuItems.value = data.map((cat) => ({
+    const data = await fetchCategoryTree()
+    menuItems.value = data.map((cat: any) => ({
       id: cat.id,
       text: cat.name,
       hasDropdown: Array.isArray(cat.children) && cat.children.length > 0,
-      subItems: (cat.children || []).map((sub) => ({
+      subItems: (cat.children || []).map((sub: any) => ({
         id: sub.id,
         text: sub.name,
       })),
@@ -208,10 +297,11 @@
 
     lastScrollTop.value = scrollTop <= 0 ? 0 : scrollTop
   }
+
   // 添加防抖函数
-  function debounce(func, wait) {
-    let timeout
-    return function executedFunction(...args) {
+  function debounce(func: Function, wait: number) {
+    let timeout: number | undefined
+    return function executedFunction(...args: any) {
       const later = () => {
         clearTimeout(timeout)
         func(...args)
@@ -235,19 +325,19 @@
     return window.innerWidth <= 768
   }
 
-  function handleMouseEnter(id) {
+  function handleMouseEnter(id: number) {
     if (isMobileView()) return
     dropdownStates[id] = true
   }
 
-  function handleMouseLeave(id) {
+  function handleMouseLeave(id: number) {
     if (isMobileView()) return
     dropdownStates[id] = false
   }
 
   // ===================== 菜单点击 =====================
   // 处理主菜单项点击
-  function handleMenuItemClick(item) {
+  function handleMenuItemClick(item: MenuItems) {
     // 如果有下拉菜单，不跳转
     if (item.hasDropdown) {
       return
@@ -263,7 +353,7 @@
   }
 
   // 处理子菜单项点击
-  function handleSubItemClick(subItem) {
+  function handleSubItemClick(subItem: SubItem) {
     console.log('点击子菜单项:', subItem.text)
     router.push({
       name: 'product-categories',
@@ -287,9 +377,6 @@
     const debouncedScroll = debounce(handleScroll, 10)
     window.removeEventListener('scroll', debouncedScroll)
   })
-  // 新增：处理滚动逻辑
-
-  // 添加点击事件处理函数
 </script>
 
 <style scoped>
@@ -437,6 +524,7 @@
   .account-dropdown-wrapper {
     position: relative;
     display: inline-block;
+    cursor: pointer;
   }
 
   /* 下拉菜单绝对定位在 Account 下方 */

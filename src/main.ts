@@ -1,8 +1,9 @@
-// import './assets/main.css'
+// src/main.ts
 
-import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import { createApp } from 'vue'
 
+import { useUserStore } from '@/stores/user'
 import App from './App.vue'
 import router from './router'
 
@@ -12,6 +13,10 @@ import 'element-plus/dist/index.css'
 const app = createApp(App)
 
 app.use(createPinia())
+
+const userStore = useUserStore()
+await userStore.bootstrap()
+
 app.use(router)
 app.use(ElementPlus)
 

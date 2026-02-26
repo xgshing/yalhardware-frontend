@@ -1,5 +1,5 @@
 <!-- 企业介绍侧边栏 -->
-<!-- src/layouts/AboutYalSidebar.vue -->
+<!-- src/components/login/AboutYalSidebar.vue -->
 <template>
   <aside :class="['admin-sidebar', { collapsed: isCollapsed }]">
     <!-- 菜单 -->

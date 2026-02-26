@@ -153,7 +153,12 @@
   import { ElMessage, ElMessageBox } from 'element-plus'
   import { Rank } from '@element-plus/icons-vue'
 
-  import { adminService } from '@/services'
+  import {
+    fetchAdminProducts,
+    patchAdminProduct,
+    reorderFeaturedProducts,
+    deleteAdminProduct,
+  } from '@/services'
   // patchAdminProduct,
   //   reorderFeaturedProducts,
   const router = useRouter()
@@ -163,7 +168,7 @@
   /* ================== 数据加载 ================== */
 
   const loadProducts = async () => {
-    const res = await adminService.fetchAdminProducts()
+    const res = await fetchAdminProducts()
     products.value = res
   }
 
@@ -181,7 +186,7 @@
   const toggleActive = async (row: any) => {
     const old = row.is_active
     try {
-      await adminService.patchAdminProduct(row.id, {
+      await patchAdminProduct(row.id, {
         is_active: row.is_active,
       })
       ElMessage.success('状态已更新')
@@ -195,7 +200,7 @@
   const toggleFeatured = async (row: any) => {
     const old = row.is_featured
     try {
-      await adminService.patchAdminProduct(row.id, {
+      await patchAdminProduct(row.id, {
         is_featured: row.is_featured,
       })
       ElMessage.success('推荐状态已更新')
@@ -222,7 +227,7 @@
         if (!featured.length) return
 
         try {
-          await adminService.reorderFeaturedProducts(featured)
+          await reorderFeaturedProducts(featured)
           // 更新本地顺序
           featured.forEach((f, i) => {
             const p = products.value.find((x) => x.id === f.id)
@@ -250,7 +255,7 @@
         }
       )
 
-      await adminService.deleteAdminProduct(row.id)
+      await deleteAdminProduct(row.id)
 
       ElMessage.success('产品已删除')
 

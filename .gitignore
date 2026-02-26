@@ -23,6 +23,7 @@ coverage
 *.njsproj
 *.sln
 *.sw?
+.env
 
 *.tsbuildinfo
 
@@ -36,3 +37,6 @@ coverage
 __screenshots__/
 
 yalhardware-frontend.git/
+
+project_tree.py
+project_tree.txt

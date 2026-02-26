@@ -1,7 +1,7 @@
 // src/composables/product/useProduct.ts
 import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { frontendService } from '@/services'
+import { fetchProductById } from '@/services'
 import type { Product } from '@/types'
 
 /**
@@ -32,7 +32,7 @@ export function useProduct() {
    */
   const loadProduct = async () => {
     if (!productId.value) return
-    const product = await frontendService.fetchProductById(productId.value)
+    const product = await fetchProductById(productId.value)
     productData.value = product
 
     images.value = product.allImages

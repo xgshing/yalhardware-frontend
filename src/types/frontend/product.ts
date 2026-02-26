@@ -11,14 +11,14 @@ export interface DetailImage {
 }
 
 export interface Variant {
-  id?: number
+  id: number
   uid: number
   style_name: string
   spec: string
   stock: number
   style_image: string
   existingImage?: string
-  imageUrl?: string | null // 👈 编辑回显（新增）
+  imageUrl?: string | null // 编辑回显
 }
 
 export interface Product {
@@ -30,11 +30,13 @@ export interface Product {
   is_featured?: boolean
   featured_order: number
 
-  url?: string
-  reviews?: string
-  price?: string
   description?: string
   specifications?: string
+  allImages: string[]
+
+  url?: string
+  reviews?: string
+  price: number
   salesVolume?: number
   casetype?: CaseType[]
   detailImages?: string[]
@@ -45,8 +47,13 @@ export interface Product {
     name: string
     parent?: number | null
   } | null
-  allImages: string[]
+
   [key: string]: any // ⭐ 允许额外字段
+}
+
+export interface ProductImage {
+  id: number
+  image: string
 }
 
 export interface CategoryProducts {
@@ -65,24 +72,26 @@ export interface ThumbnailBreakpoints {
   }
 }
 
-// 购物车商品类型
+/* ================= 购物车 ================= */
 export interface CartItem {
-  id: number
+  productId?: number
+  variant_id?: number
+
   name: string
-  price?: string
-  unitPrice?: string
+  image?: string
   caseType?: string
-  image: string
+
+  price: number
   quantity: number
-  maxStock?: number
+  checked: boolean
 }
 
 // 添加到购物车的商品类型（允许部分属性可选）
 export interface AddToCartItem {
-  id?: number
+  productId: number
+  variant_id: number
   name: string
-  price: string
-  unitPrice: string
+  price: number
   caseType?: string // 改为可选
   image?: string // 改为可选
   quantity: number
@@ -116,11 +125,6 @@ export interface BannerItem {
   images: string[]
 }
 
-export interface ProductImage {
-  id: number
-  image: string
-}
-
 export interface HomeData {
   categoryProducts: CategoryProducts
   allProducts: Product[]
@@ -134,4 +138,15 @@ export interface ProductCategory {
   name: string
   parent: number | null // 父级分类ID
   children: ProductCategory[] // 子分类数组
+}
+
+export interface addItem {
+  id: number
+  productId: number
+  variant_id: number
+  name: string
+  unitPrice: string
+  image?: string
+  caseType?: string
+  quantity: number
 }

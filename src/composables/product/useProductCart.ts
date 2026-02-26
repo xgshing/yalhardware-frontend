@@ -22,16 +22,21 @@ export function useProductCart() {
     quantity: number,
     selectedIndex: number
   ) => {
-    // 根据选择的索引获取对应的款式（variant）
-    // 如果 selectedIndex 为 -1 或无效，variant 为 undefined
-    const variant = product.variants![selectedIndex]! // product.variants 存在且 selectedIndex 有效
+    if (!product.variants?.length) {
+      throw new Error('该商品没有可选规格')
+    }
 
+    // 根据选择的索引获取对应的款式（variant）
+    const variant = product.variants[selectedIndex]
+    if (!variant) {
+      throw new Error('请选择有效的商品规格')
+    }
     // 调用购物车 store 的添加方法
     cartStore.addItem({
-      id: product.id, // 产品唯一标识
+      productId: product.id,
+      variant_id: variant.id,
       name: product.name, // 产品名称
-      // price: product.price,
-      unitPrice: product.price, // 产品单价
+      price: product.price, // 产品单价
       caseType: variant.style_name, // 款式名称
       image: variant.style_image, // 款式图片
       quantity, // 购买数量

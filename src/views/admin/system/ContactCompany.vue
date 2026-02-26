@@ -54,7 +54,7 @@
 <script setup lang="ts">
   import { ref, onMounted } from 'vue'
   import { ElMessage } from 'element-plus'
-  import { adminService } from '@/services'
+  import { getCompanyProfile, saveCompanyProfile } from '@/services'
 
   const loading = ref(false)
 
@@ -68,7 +68,7 @@
 
   const loadData = async () => {
     try {
-      const data = await adminService.getCompanyProfile()
+      const data = await getCompanyProfile()
 
       Object.assign(form.value, data)
     } catch (error) {
@@ -79,7 +79,7 @@
   const save = async () => {
     loading.value = true
     try {
-      await adminService.saveCompanyProfile(form.value)
+      await saveCompanyProfile(form.value)
       ElMessage.success('保存成功')
     } finally {
       loading.value = false

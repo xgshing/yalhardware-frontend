@@ -1,0 +1,24 @@
+/* 订单样式 */
+/* src/styles/frontend/orders.css */
+
+/* 页面整体背景 */
+.orders-page {
+  background: #f6f7f9;
+  min-height: 100vh;
+  padding: 24px 0;
+}
+
+/* 中心内容区 */
+.orders-container {
+  max-width: 960px; /* Shopify 常用 920–1040 */
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* 空状态 */
+.empty {
+  text-align: center;
+  color: #999;
+  padding: 60px 0;
+  font-size: 14px;
+}

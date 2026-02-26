@@ -37,7 +37,11 @@
 
   import QuillEditor from '@/components/editor/QuillEditor.vue'
   import '@vueup/vue-quill/dist/vue-quill.snow.css'
-  import { adminService } from '@/services'
+  import {
+    getCompanyProfile,
+    saveCompanyProfile,
+    uploadRichImage,
+  } from '@/services'
 
   /* ---------------- state ---------------- */
   const form = ref({
@@ -60,7 +64,7 @@
   /* ---------------- api ---------------- */
   const loadData = async () => {
     try {
-      const data = await adminService.getCompanyProfile()
+      const data = await getCompanyProfile()
       form.value.about_html = data.about_html || ''
     } catch (e) {
       ElMessage.error('获取公司介绍失败')
@@ -70,7 +74,7 @@
   const save = async () => {
     loading.value = true
     try {
-      await adminService.saveCompanyProfile({
+      await saveCompanyProfile({
         about_html: form.value.about_html,
       })
       ElMessage.success('保存成功')
@@ -84,7 +88,7 @@
   // 富文本图片上传
   const handleImageUpload = async (file: File) => {
     try {
-      const res = await adminService.uploadRichImage(file)
+      const res = await uploadRichImage(file)
       return res.data?.url || ''
     } catch (error) {
       ElMessage.error('图片上传失败')

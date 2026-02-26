@@ -1,8 +1,9 @@
-<!-- 001-yal-tools/src/App.vue -->
+<!-- /src/App.vue -->
 <script setup lang="ts">
+  import Drawer from '@/components/Drawer.vue'
+
   import { onMounted } from 'vue'
   import { RouterView } from 'vue-router'
-  import Drawer from '@/components/Drawer.vue'
 
   onMounted(() => {
     // 检查 DOM

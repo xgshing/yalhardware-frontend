@@ -1,6 +1,6 @@
 // 定义每个内容模块的 UI 结构,驱动后台列表页 + 表单页的自动生成
 // src / configs / admin / content.ts
-import { contentApi } from '@/api/admin/content.api'
+import { contentApi } from '@/api/admin/content'
 import type { ContentCrudApi } from '@/types'
 
 export const contentConfigs: Record<
