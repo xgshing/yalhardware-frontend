@@ -18,7 +18,7 @@ const request = axios.create({
   // 基础 API URL：从环境变量 VITE_API_BASE_URL 获取，拼接 /api 路径
   // 支持不同环境（开发 / 测试 / 生产）
   baseURL: `${import.meta.env.VITE_API_BASE_URL}/api`,
-  timeout: 10000,
+  timeout: 30000,
 })
 
 /**
