@@ -1,1 +1,0 @@
-import{P as t}from"./index-Jp6YeN9G.js";const a={tree:()=>t.get("/admin/categories/tree/"),create:e=>t.post("/admin/categories/",e)},c=async()=>(await a.tree()).data,o=async e=>(await a.create(e)).data;export{o as c,c as f};

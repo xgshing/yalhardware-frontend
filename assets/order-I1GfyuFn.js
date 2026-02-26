@@ -1,1 +1,0 @@
-import{P as t}from"./index-Jp6YeN9G.js";function e(r){return t.get("/admin/orders/",{params:r})}function a(r){return t.get(`/admin/orders/${r}/`)}function i(r,n){return t.post(`/admin/orders/${r}/ship/`,n)}async function s(r){const{data:n}=await e(r);return n}async function o(r){const{data:n}=await a(r);return n}async function c(r,n){await i(r,n)}export{o as a,s as g,c as s};
