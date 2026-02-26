@@ -30,7 +30,6 @@
               >
             </a>
 
-            <!-- 下拉菜单 -->
             <div
               v-if="item.hasDropdown && dropdownStates[item.id]"
               class="dropdown-menu"
@@ -55,62 +54,60 @@
           About Us
         </div>
 
-        <!-- 桌面导航搜索、登录账户、购物车功能 -->
+        <!-- 桌面右侧功能 -->
         <div class="nav-right">
-          <a class="search"> <span class="rotate-char">⌕</span>Search</a>
+          <a class="search"><span class="rotate-char">⌕</span>Search</a>
 
           <!-- Account 下拉菜单 -->
           <div class="account-dropdown-wrapper">
             <a
               class="account"
               @click="toggleDropdown"
-              >{{ isLoggedIn ? userFullName : 'Account' }}</a
             >
+              {{ isLoggedIn ? userFullName : 'Account' }}
+            </a>
 
-            <!-- 登录下拉窗 -->
-            <div>
-              <div
-                v-if="isOpen"
-                class="account-dropdown"
-              >
-                <!-- 未登录 -->
-                <template v-if="!isLoggedIn">
-                  <div
-                    @click="handleLogin"
-                    class="dropdown-item"
-                  >
-                    Log In
-                  </div>
-                  <div
-                    @click="handleCreateAccount"
-                    class="dropdown-item"
-                  >
-                    Create Account
-                  </div>
-                </template>
+            <div
+              v-if="isOpen"
+              class="account-dropdown"
+            >
+              <!-- 未登录 -->
+              <template v-if="!isLoggedIn">
+                <div
+                  class="dropdown-item"
+                  @click="handleLogin"
+                >
+                  Log In
+                </div>
+                <div
+                  class="dropdown-item"
+                  @click="handleCreateAccount"
+                >
+                  Create Account
+                </div>
+              </template>
 
-                <!-- 已登录 -->
-                <template v-else>
-                  <div
-                    class="dropdown-item"
-                    @click="goProfile"
-                  >
-                    Hello,{{ userFullName }}
-                  </div>
-                  <div
-                    class="dropdown-item"
-                    @click="gooders"
-                  >
-                    My Orders
-                  </div>
-                  <div
-                    class="dropdown-item"
-                    @click="handleLogout"
-                  >
-                    Log Out
-                  </div>
-                </template>
-              </div>
+              <!-- 已登录 -->
+              <template v-else>
+                <div
+                  class="dropdown-item"
+                  @click="goProfile"
+                >
+                  Hello, {{ userFullName }}
+                </div>
+                <div
+                  class="dropdown-item"
+                  @click="gooders"
+                >
+                  My Orders
+                </div>
+                <div
+                  class="dropdown-item"
+                  @click="handleLogout"
+                >
+                  Log Out
+                </div>
+              </template>
             </div>
           </div>
 
@@ -137,35 +134,32 @@
         </button>
       </div>
     </header>
-    <!-- 固定高度的占位元素 -->
+
+    <!-- 占位元素 -->
     <div class="nav-placeholder"></div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
-  import { useRouter } from 'vue-router'
-
   import { fetchCategoryTree, logoutUser } from '@/services'
   import { useCartStore } from '@/stores/cart'
   import { useUserStore } from '@/stores/user'
+  import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
+  import { useRouter } from 'vue-router'
 
   const router = useRouter()
-  const logo = reactive({
-    text: 'YAL Industrial & Trading',
-  })
+  const logo = reactive({ text: 'YAL Industrial & Trading' })
 
-  // ===================== 导航栏滚动 =====================
+  // ================== 导航滚动 ==================
   const isNavVisible = ref(true)
   const lastScrollTop = ref(0)
   const hasScrolled = ref(false)
 
-  // ===================== 菜单 =====================
+  // ================== 菜单 ==================
   interface SubItem {
     id: number
     text: string
   }
-
   interface MenuItems {
     id: number
     text: string
@@ -173,99 +167,46 @@
     subItems: SubItem[]
   }
 
-  const menuItems = ref<MenuItems[]>([]) // 菜单数组动态生成
-  const dropdownStates = reactive<Record<number, boolean>>({}) // 下拉状态
+  const menuItems = ref<MenuItems[]>([])
+  const dropdownStates = reactive<Record<number, boolean>>({})
 
-  // ===================== 关于公司 =====================
-  const openAboutUs = () => {
-    router.push({
-      name: 'about',
-      query: {
-        purpose: 'About Us',
-      },
-    })
-  }
+  // ================== 关于公司 ==================
+  const openAboutUs = () =>
+    router.push({ name: 'about', query: { purpose: 'About Us' } })
 
-  // ===================== 购物车 =====================
+  // ================== 购物车 ==================
   const cartStore = useCartStore()
+  const openCart = () =>
+    router.push({ name: 'cart', query: { purpose: 'Your Shopping Cart' } })
 
-  const openCart = () => {
-    router.push({
-      name: 'cart',
-      query: {
-        purpose: 'Your Shopping Cart',
-      },
-    })
-  }
-  // ===================== 账户 =====================
-  interface User {
-    isLoggedIn: boolean
-    first_name: string
-    last_name: string
-  }
+  // ================== 用户 ==================
+  const userStore = useUserStore() // ✅ Pinia store
 
-  const userStore = useUserStore()
-
-  // 计算属性：命名
-  const userFullName = computed(() => {
-    if (!userStore.user) return null
-    return `${userStore.user.first_name} ${userStore.user.last_name}`
-  })
+  // computed
   const isLoggedIn = computed(() => !!userStore.user)
+  const userFullName = computed(() => userStore.fullName) // 直接使用 store 的 getter
 
+  // 下拉状态
   const isOpen = ref(false)
   const toggleDropdown = () => {
     isOpen.value = !isOpen.value
   }
 
-  // ===================== 跳转函数 =====================
-  const handleLogin = () => {
-    router.push({
-      name: 'login',
-      query: {
-        purpose: 'Login',
-      },
-    })
-    isOpen.value = false
-  }
-
-  const handleCreateAccount = () => {
-    router.push({
-      name: 'register',
-      query: {
-        purpose: 'Create Account',
-      },
-    })
-    isOpen.value = false
-  }
-  const goProfile = () => {
-    router.push({ name: 'profile' })
-    isOpen.value = false
-  }
-
-  const gooders = () => {
-    router.push({ name: 'order-list' })
-    isOpen.value = false
-  }
-
+  // ================== 导航跳转 ==================
+  const handleLogin = () =>
+    router.push({ name: 'login', query: { purpose: 'Login' } })
+  const handleCreateAccount = () =>
+    router.push({ name: 'register', query: { purpose: 'Create Account' } })
+  const goProfile = () => router.push({ name: 'profile' })
+  const gooders = () => router.push({ name: 'order-list' })
   const handleLogout = () => {
-    console.log('handleLogout clicked') // 1️⃣ 点击是否触发
-    console.log('Before logout, userStore.user:', userStore.user)
-
-    logoutUser() // 清理 token
-    console.log(
-      'After logoutUser(), localStorage token:',
-      localStorage.getItem('access'),
-      localStorage.getItem('refresh')
-    )
-
-    userStore.logout() // 清空 Pinia 状态
-    console.log('After userStore.logout(), userStore.user:', userStore.user)
-
-    router.push({ name: 'home' })
+    logoutUser()
+    userStore.logout()
     isOpen.value = false
+    router.push({ name: 'home' })
   }
-  // ===================== 获取后台分类 =====================
+
+  // ================== 获取后台分类 ==================
   async function fetchCategories() {
     const data = await fetchCategoryTree()
     menuItems.value = data.map((cat: any) => ({
@@ -279,26 +220,16 @@
     }))
   }
 
-  // ===================== 页面滚动 =====================
+  // ================== 页面滚动 ==================
   function handleScroll() {
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop
-
-    // 添加阴影效果的条件
     hasScrolled.value = scrollTop > 10
-
-    // 向下滚动：隐藏导航栏
-    if (scrollTop > lastScrollTop.value && scrollTop > 100) {
+    if (scrollTop > lastScrollTop.value && scrollTop > 100)
       isNavVisible.value = false
-    }
-    // 向上滚动：显示导航栏
-    else if (scrollTop < lastScrollTop.value) {
-      isNavVisible.value = true
-    }
-
+    else if (scrollTop < lastScrollTop.value) isNavVisible.value = true
     lastScrollTop.value = scrollTop <= 0 ? 0 : scrollTop
   }
 
-  // 添加防抖函数
   function debounce(func: Function, wait: number) {
     let timeout: number | undefined
     return function executedFunction(...args: any) {
@@ -311,69 +242,42 @@
     }
   }
 
-  // ===================== 鼠标、移动端 =====================
+  // ================== 鼠标 & 移动端 ==================
   const isMobileMenuOpen = ref(false)
-  function toggleMobileMenu() {
+  const toggleMobileMenu = () => {
     isMobileMenuOpen.value = !isMobileMenuOpen.value
   }
-
-  function closeMobileMenu() {
+  const closeMobileMenu = () => {
     isMobileMenuOpen.value = false
   }
-
-  function isMobileView() {
-    return window.innerWidth <= 768
+  const isMobileView = () => window.innerWidth <= 768
+  const handleMouseEnter = (id: number) => {
+    if (!isMobileView()) dropdownStates[id] = true
+  }
+  const handleMouseLeave = (id: number) => {
+    if (!isMobileView()) dropdownStates[id] = false
   }
 
-  function handleMouseEnter(id: number) {
-    if (isMobileView()) return
-    dropdownStates[id] = true
-  }
-
-  function handleMouseLeave(id: number) {
-    if (isMobileView()) return
-    dropdownStates[id] = false
-  }
-
-  // ===================== 菜单点击 =====================
-  // 处理主菜单项点击
+  // 菜单点击
   function handleMenuItemClick(item: MenuItems) {
-    // 如果有下拉菜单，不跳转
-    if (item.hasDropdown) {
-      return
-    }
-
-    // 直接在这里使用 router
-    router.push({
-      name: 'product-categories',
-      query: {
-        category: item.text,
-      },
-    })
+    if (item.hasDropdown) return
+    router.push({ name: 'product-categories', query: { category: item.text } })
   }
-
-  // 处理子菜单项点击
   function handleSubItemClick(subItem: SubItem) {
-    console.log('点击子菜单项:', subItem.text)
     router.push({
       name: 'product-categories',
-      query: {
-        category: subItem.text,
-      },
+      query: { category: subItem.text },
     })
     closeMobileMenu()
   }
 
-  // ===================== 生命周期 =====================
+  // ================== 生命周期 ==================
   onMounted(() => {
     fetchCategories()
-    // 使用防抖优化性能
     const debouncedScroll = debounce(handleScroll, 10)
     window.addEventListener('scroll', debouncedScroll)
   })
-
   onUnmounted(() => {
-    // 新增：移除滚动事件监听
     const debouncedScroll = debounce(handleScroll, 10)
     window.removeEventListener('scroll', debouncedScroll)
   })

@@ -8,15 +8,15 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, watch } from 'vue'
-  import { useRoute, useRouter } from 'vue-router'
-  import { ElLoading, ElMessage } from 'element-plus'
-  import ProductForm from './ProductForm.vue'
   import {
+    createAdminProduct,
     fetchAdminProductDetail,
     updateAdminProduct,
-    createAdminProduct,
   } from '@/services'
+  import { ElLoading, ElMessage } from 'element-plus'
+  import { ref, watch } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
+  import ProductForm from './ProductForm.vue'
 
   /* ================= 路由 ================= */
   const route = useRoute()
@@ -102,9 +102,10 @@
         ElMessage.success('创建成功')
         router.push('/admin/products')
       }
-    } catch (error) {
-      ElMessage.error('保存失败')
-      console.error('保存错误:', error)
+    } catch (err: any) {
+      console.error('保存失败 status:', err.response?.status)
+      console.error('保存失败 data:', err.response?.data)
+      console.error('完整错误:', err)
     } finally {
       loading.close()
     }

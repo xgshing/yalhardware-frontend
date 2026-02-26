@@ -13,12 +13,19 @@ export const useUserStore = defineStore('user', {
   getters: {
     isLogin: (state) => !!state.user,
     isAdmin: (state) => !!state.user?.is_staff,
+    fullName: (state) => {
+      if (!state.user) return null
+      const first = state.user.first_name || state.user.username
+      const last = state.user.last_name || ''
+      return `${first} ${last}`.trim()
+    },
   },
 
   actions: {
     /** App 启动 / 刷新时调用 */
     async bootstrap() {
       try {
+        // initUser() 返回 null 或 User 对象
         this.user = await initUser()
       } catch {
         this.user = null
@@ -33,10 +40,11 @@ export const useUserStore = defineStore('user', {
       this.ready = true
     },
 
+    /** 登出 */
     logout() {
       this.user = null
       this.ready = true
-      clearToken()
+      clearToken() // 清理 token（localStorage / cookie）
     },
   },
 })
