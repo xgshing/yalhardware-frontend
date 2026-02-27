@@ -178,10 +178,10 @@
     </div>
 
     <!-- 评论区域 -->
-    <ProductReviews
+    <!-- <ProductReviews
       v-if="productData && productData.id"
       :product-id="productData.id"
-    />
+    /> -->
 
     <!-- 相似产品推荐区域 -->
     <SimilarProducts
