@@ -1,1 +1,0 @@
-import{_ as t}from"./NavBar-8unkQMjJ.js";import{d as _,c as s,e as o,f as n,h as a,_ as c}from"./index-CEKWf8pa.js";import"./category-ETcGn-H8.js";const r={class:"home-layout"},m=_({__name:"HomeLayout",setup(p){return(u,i)=>{const e=n("router-view");return a(),s("div",r,[o(t),o(e)])}}}),v=c(m,[["__scopeId","data-v-1dc99716"]]);export{v as default};
