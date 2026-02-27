@@ -149,6 +149,8 @@
       // 构建订单payload
       const payload = cartStore.buildOrderPayload()
 
+      console.log('Submitting payload:', JSON.stringify(payload, null, 2))
+
       if (payload.items.length === 0) {
         ElMessage.warning('Please select items to checkout')
         return
