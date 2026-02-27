@@ -120,6 +120,8 @@
   import { Icon } from '@iconify/vue'
   import { ElMessage } from 'element-plus'
 
+  import axios from 'axios'
+
   const route = useRoute()
   const router = useRouter()
 
@@ -162,9 +164,16 @@
           id: order.id,
         },
       })
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err)
-      ElMessage.error('Failed to create order')
+
+      if (axios.isAxiosError(err)) {
+        console.log('Response data:', err.response?.data)
+        ElMessage.error(err.response?.data?.detail || 'Failed to create order')
+      } else {
+        console.log('Unknown error:', err)
+        ElMessage.error('Unexpected error occurred')
+      }
     }
   }
 </script>
