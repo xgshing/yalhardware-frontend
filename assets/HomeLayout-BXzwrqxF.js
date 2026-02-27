@@ -1,0 +1,1 @@
+import{_ as t}from"./NavBar-CL6QGKy2.js";import{d as _,c as s,e as o,f as n,h as a,_ as c}from"./index-CfV5Rwq0.js";import"./category-C76Q3m2z.js";const r={class:"home-layout"},m=_({__name:"HomeLayout",setup(p){return(u,i)=>{const e=n("router-view");return a(),s("div",r,[o(t),o(e)])}}}),v=c(m,[["__scopeId","data-v-1dc99716"]]);export{v as default};
