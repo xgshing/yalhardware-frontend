@@ -118,9 +118,8 @@
 
   import { orderService } from '@/services'
   import { Icon } from '@iconify/vue'
-  import { ElMessage } from 'element-plus'
-
   import axios from 'axios'
+  import { ElMessage } from 'element-plus'
 
   const route = useRoute()
   const router = useRouter()
@@ -149,15 +148,18 @@
       // 构建订单payload
       const payload = cartStore.buildOrderPayload()
 
-      console.log('Submitting payload:', JSON.stringify(payload, null, 2))
+      console.log('Submitting payload:')
+      console.log(JSON.stringify(payload, null, 2))
+      console.log('Cart store items:', cartStore.items)
 
-      if (payload.items.length === 0) {
+      if (!payload.items || payload.items.length === 0) {
         ElMessage.warning('Please select items to checkout')
         return
       }
 
       // 调用后端创建订单
       const order = await orderService.submit(payload)
+      ElMessage.success('Order created successfully')
 
       // 成功后跳转到确认面（带id)
       router.push({
@@ -167,13 +169,10 @@
         },
       })
     } catch (err: unknown) {
-      console.error(err)
-
       if (axios.isAxiosError(err)) {
         console.log('Response data:', err.response?.data)
         ElMessage.error(err.response?.data?.detail || 'Failed to create order')
       } else {
-        console.log('Unknown error:', err)
         ElMessage.error('Unexpected error occurred')
       }
     }
