@@ -103,8 +103,6 @@
         router.push('/admin/products')
       }
     } catch (err: any) {
-      console.error('保存失败 status:', err.response?.status)
-      console.error('保存失败 data:', err.response?.data)
       console.error('完整错误:', err)
     } finally {
       loading.close()

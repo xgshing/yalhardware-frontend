@@ -148,10 +148,6 @@
       // 构建订单payload
       const payload = cartStore.buildOrderPayload()
 
-      console.log('Submitting payload:')
-      console.log(JSON.stringify(payload, null, 2))
-      console.log('Cart store items:', cartStore.items)
-
       if (!payload.items || payload.items.length === 0) {
         ElMessage.warning('Please select items to checkout')
         return
@@ -170,7 +166,6 @@
       })
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
-        console.log('Response data:', err.response?.data)
         ElMessage.error(err.response?.data?.detail || 'Failed to create order')
       } else {
         ElMessage.error('Unexpected error occurred')

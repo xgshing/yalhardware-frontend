@@ -293,7 +293,7 @@
   // ================== watch 用户状态 ==================
   watch(
     () => userStore.user,
-    (newVal) => console.log('userStore.user changed:', newVal),
+    () => {},
     { immediate: true }
   )
 </script>

@@ -22,6 +22,8 @@ export const reviewService = {
 
     if (params.order_item_id) {
       const res = await reviewApi.getOrderItemReview(params.order_item_id)
+
+      // 后端返回可能是对象或空，需要统一为数组
       return {
         results: res.data ? [res.data as Review] : [],
         total: res.data ? 1 : 0,

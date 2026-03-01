@@ -52,9 +52,9 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted } from 'vue'
-  import { ElMessage } from 'element-plus'
   import { getCompanyProfile, saveCompanyProfile } from '@/services'
+  import { ElMessage } from 'element-plus'
+  import { onMounted, ref } from 'vue'
 
   const loading = ref(false)
 

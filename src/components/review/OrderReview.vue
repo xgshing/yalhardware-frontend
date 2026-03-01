@@ -109,6 +109,8 @@
                 star <= item.reviewForm.rating || star <= item.hoverRating,
             }"
             @click="item.reviewForm.rating = star"
+            @mouseover="item.hoverRating = star"
+            @mouseleave="item.hoverRating = 0"
             >★</span
           >
         </div>
@@ -162,7 +164,7 @@
 <script setup lang="ts">
   import { uploadApi } from '@/api/common/upload'
   import { reviewService } from '@/services/frontend/reviews'
-  import type { OrderItem, OrderItemUI, ReviewFile } from '@/types'
+  import type { OrderItem, OrderItemUI } from '@/types'
   import { onMounted, ref } from 'vue'
 
   const props = defineProps<{ orderItems: OrderItem[] }>()
@@ -171,14 +173,13 @@
   const reviewItems = ref<OrderItemUI[]>([])
   const defaultImage = '/default-product.png'
   const MAX_IMAGES = 6
-  const emptyImages: ReviewFile[] = []
 
   onMounted(async () => {
     // 深拷贝 orderItems 并添加前端状态
     reviewItems.value = props.orderItems.map((item) => ({
       ...item,
 
-      reviewForm: { rating: 0, content: '', images: emptyImages },
+      reviewForm: { rating: 0, content: '', images: [] },
       appendForm: { content: '' },
       hoverRating: 0,
       submitting: false,
@@ -357,7 +358,7 @@
     display: block;
     margin-bottom: 8px;
   }
-  .preview-images {
+  .preview-list {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
