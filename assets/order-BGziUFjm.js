@@ -1,1 +1,0 @@
-import{P as t}from"./index-DjLgSbeZ.js";function a(n){return t.get("/admin/orders/",{params:n})}function e(n){return t.get(`/admin/orders/${n}/`)}function i(n,r){return t.post(`/admin/orders/${n}/ship/`,r)}async function s(n){const{data:r}=await a(n);return r}async function o(n){const{data:r}=await e(n);return r}async function c(n,r){await i(n,r)}export{o as a,s as g,c as s};
