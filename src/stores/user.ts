@@ -1,14 +1,9 @@
 // src/stores/user.ts
 
 import { initUser, loginUser } from '@/services/frontend/auth'
-import type { User } from '@/types'
+import type { LoginPayload, User } from '@/types'
 import { clearUserToken } from '@/utils/auth'
 import { defineStore } from 'pinia'
-
-interface LoginPayload {
-  email: string
-  password: string
-}
 
 export const useUserStore = defineStore('user', {
   state: () => ({

@@ -78,7 +78,6 @@
   import { AuthLayout, LoginInput } from '@/components/auth'
   import { useAdminStore } from '@/stores/admin'
   import { useUserStore } from '@/stores/user'
-  import { getAdminAccessToken } from '@/utils/auth'
   import { computed, ref } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
 
@@ -121,11 +120,6 @@
       if (isAdminLogin.value) {
         // 管理员登录
         await adminStore.login({ email: email.value, password: password.value })
-
-        const token = getAdminAccessToken()
-        console.log('Admin login | token after login:', token)
-
-        if (!token) throw new Error('Admin token 未写入')
 
         success.value = 'Admin login successful'
 

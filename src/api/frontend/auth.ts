@@ -1,10 +1,10 @@
 // API 定义
 // src/api/frontend/auth.ts
-import type { LoginResponse } from '@/types'
+import type { LoginPayload, LoginResponse } from '@/types'
 import { frontendRequest } from '@/utils/request'
 
 export const frontendAuthApi = {
-  login: (data: { email: string; password: string }) =>
+  login: (data: LoginPayload) =>
     frontendRequest.post<LoginResponse>('/users/auth/login/', data),
 
   register: (data: {

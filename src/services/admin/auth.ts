@@ -1,6 +1,6 @@
 // src/services/admin/auth.ts
 import { adminAuthApi, frontendAuthApi } from '@/api'
-import type { User } from '@/types'
+import type { LoginPayload, User } from '@/types'
 import {
   clearAdminToken,
   getAdminAccessToken,
@@ -11,11 +11,11 @@ import {
  * 管理员登录
  * - 返回完整 admin 信息
  */
-export async function loginAdmin(data: {
-  email: string
-  password: string
-}): Promise<User> {
-  const res = await frontendAuthApi.login(data)
+export async function loginAdmin(data: LoginPayload): Promise<User> {
+  const res = await frontendAuthApi.login({
+    ...data,
+    admin: true, // 👈 明确声明后台登录
+  })
   const { access, refresh, user } = res.data
   setAdminToken(access, refresh)
   return user
@@ -34,7 +34,6 @@ export async function initAdmin(): Promise<User | null> {
     const res = await adminAuthApi.me()
     return res.data
   } catch (e) {
-    console.log('initAdmin error:', e)
     clearAdminToken()
     return null
   }

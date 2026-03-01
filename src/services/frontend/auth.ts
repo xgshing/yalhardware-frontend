@@ -1,7 +1,7 @@
 // 业务封装/状态初始化
 // src/services/frontend/auth.ts
 import { frontendAuthApi, frontendUserApi } from '@/api'
-import type { User } from '@/types'
+import type { LoginPayload, User } from '@/types'
 import { clearUserToken, getUserAccessToken, setUserToken } from '@/utils/auth'
 
 /**
@@ -25,11 +25,11 @@ export async function registerUser(data: {
  * - 保存 token
  * - 返回 user
  */
-export async function loginUser(data: {
-  email: string
-  password: string
-}): Promise<User> {
-  const res = await frontendAuthApi.login(data)
+export async function loginUser(data: LoginPayload): Promise<User> {
+  const res = await frontendAuthApi.login({
+    ...data,
+    admin: false, // 明确声明前台登录
+  })
   const { access, refresh, user } = res.data
 
   setUserToken(access, refresh)

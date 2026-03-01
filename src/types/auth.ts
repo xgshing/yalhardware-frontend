@@ -8,3 +8,9 @@ export interface LoginResponse {
   refresh: string
   user: User
 }
+
+export interface LoginPayload {
+  email: string
+  password: string
+  admin?: boolean
+}

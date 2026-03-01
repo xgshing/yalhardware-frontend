@@ -1,6 +1,6 @@
 // src/stores/admin.ts
 import { initAdmin, loginAdmin } from '@/services/admin/auth'
-import type { User } from '@/types'
+import type { LoginPayload, User } from '@/types'
 import { clearAdminToken, getAdminAccessToken } from '@/utils/auth'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
@@ -39,7 +39,7 @@ export const useAdminStore = defineStore('admin', () => {
     }
   }
 
-  async function login(payload: { email: string; password: string }) {
+  async function login(payload: LoginPayload) {
     if (loading.value) return
     loading.value = true
     try {
