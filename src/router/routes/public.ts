@@ -9,9 +9,6 @@ const publicRoutes: RouteRecordRaw[] = [
     name: 'login',
     component: () => import('@/views/public/Login.vue'),
     props: true,
-    meta: {
-      guestOnly: true,
-    },
   },
   // 用户注册页面
   {
@@ -19,9 +16,12 @@ const publicRoutes: RouteRecordRaw[] = [
     name: 'register',
     component: () => import('@/views/public/Register.vue'),
     props: true, // 启用 props 传递
-    meta: {
-      guestOnly: true, // 只能游客访问
-    },
+  },
+  {
+    path: '/admin/login', // 管理员登录路由
+    name: 'admin-login',
+    component: () => import('@/views/public/Login.vue'),
+    props: { admin: true },
   },
 ]
 

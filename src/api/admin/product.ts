@@ -1,23 +1,23 @@
 // src/api/admin/product.ts
-import request from '@/utils/request'
 import type { Product } from '@/types/frontend/product'
+import { adminRequest } from '@/utils/request'
 import type { AxiosResponse } from 'axios'
 
 export const adminProductApi = {
   /* ===================== 查询 ===================== */
 
   list(params?: Record<string, any>): Promise<AxiosResponse<Product[]>> {
-    return request.get('/admin/products/', { params })
+    return adminRequest.get('/admin/products/', { params })
   },
 
   detail(id: number): Promise<AxiosResponse<Product>> {
-    return request.get(`/admin/products/${id}/`)
+    return adminRequest.get(`/admin/products/${id}/`)
   },
 
   /* ===================== 表单 ===================== */
 
   create(data: FormData) {
-    return request.post('/admin/products/', data)
+    return adminRequest.post('/admin/products/', data)
   },
 
   /**
@@ -25,7 +25,7 @@ export const adminProductApi = {
    * 对应你后端 update()
    */
   update(id: number, data: FormData) {
-    return request.put(`/admin/products/${id}/`, data)
+    return adminRequest.put(`/admin/products/${id}/`, data)
   },
 
   /* ===================== 业务 PATCH ===================== */
@@ -42,7 +42,7 @@ export const adminProductApi = {
       featured_order: number
     }>
   ) {
-    return request.patch(`/admin/products/${id}/`, data)
+    return adminRequest.patch(`/admin/products/${id}/`, data)
   },
 
   /**
@@ -50,12 +50,12 @@ export const adminProductApi = {
    * @action reorder
    */
   reorder(data: Array<{ id: number; featured_order: number }>) {
-    return request.post('/admin/products/reorder/', data)
+    return adminRequest.post('/admin/products/reorder/', data)
   },
 
   /* ===================== 删除 ===================== */
 
   delete(id: number) {
-    return request.delete(`/admin/products/${id}/`)
+    return adminRequest.delete(`/admin/products/${id}/`)
   },
 }

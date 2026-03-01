@@ -1,5 +1,6 @@
 // src/services/index.ts
 
+export * from './admin/auth'
 export * from './admin/category'
 export * from './admin/comment'
 export * from './admin/company'

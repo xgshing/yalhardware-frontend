@@ -1,30 +1,59 @@
-/**
- * 认证令牌管理工具函数
- * 提供 Token 的存储、获取和清除功能
- */
-// src/utils/auth.ts
-const ACCESS_KEY = 'access_token'
-const REFRESH_KEY = 'refresh_token'
+// utils/auth.ts
+// ============================================================
+// 双 Token 存储管理（生产级）
+// 前后台完全隔离，互不影响
+// ============================================================
 
-export function setToken(access: string, refresh: string) {
-  // 存储访问令牌到localStorage， 键名：“access_token”
-  localStorage.setItem(ACCESS_KEY, access)
-  // 存储刷新令牌，键名"refresh_token"
-  localStorage.setItem(REFRESH_KEY, refresh)
+const USER_ACCESS = 'user_access_token'
+const USER_REFRESH = 'user_refresh_token'
+
+const ADMIN_ACCESS = 'admin_access_token'
+const ADMIN_REFRESH = 'admin_refresh_token'
+
+/* ================= 普通用户 ================= */
+
+// 保存普通用户 token
+export function setUserToken(access: string, refresh: string) {
+  localStorage.setItem(USER_ACCESS, access)
+  localStorage.setItem(USER_REFRESH, refresh)
 }
 
-export function getAccessToken() {
-  // 从 localStorage 获取访问令牌
-  return localStorage.getItem(ACCESS_KEY)
+// 获取普通用户 access token
+export function getUserAccessToken(): string | null {
+  return localStorage.getItem(USER_ACCESS)
 }
 
-export function getRefreshToken() {
-  return localStorage.getItem(REFRESH_KEY)
+// 获取普通用户 refresh token
+export function getUserRefreshToken(): string | null {
+  return localStorage.getItem(USER_REFRESH)
 }
 
-export function clearToken() {
-  // 移除访问令牌
-  localStorage.removeItem(ACCESS_KEY)
-  // 移除刷新令牌
-  localStorage.removeItem(REFRESH_KEY)
+// 清除普通用户 token
+export function clearUserToken() {
+  localStorage.removeItem(USER_ACCESS)
+  localStorage.removeItem(USER_REFRESH)
+}
+
+/* ================= 管理员 ================= */
+
+// 保存管理员 token
+export function setAdminToken(access: string, refresh: string) {
+  localStorage.setItem(ADMIN_ACCESS, access)
+  localStorage.setItem(ADMIN_REFRESH, refresh)
+}
+
+// 获取管理员 access token
+export function getAdminAccessToken(): string | null {
+  return localStorage.getItem(ADMIN_ACCESS)
+}
+
+// 获取管理员 refresh token
+export function getAdminRefreshToken(): string | null {
+  return localStorage.getItem(ADMIN_REFRESH)
+}
+
+// 清除管理员 token
+export function clearAdminToken() {
+  localStorage.removeItem(ADMIN_ACCESS)
+  localStorage.removeItem(ADMIN_REFRESH)
 }

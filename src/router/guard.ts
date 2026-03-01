@@ -1,37 +1,52 @@
-/* src/router/guard.ts */
+// src/router/guard.ts
+import { useAdminStore } from '@/stores/admin'
 import { useUserStore } from '@/stores/user'
 import type { Router } from 'vue-router'
 
 export function setupRouterGuard(router: Router) {
   router.beforeEach(async (to) => {
     const userStore = useUserStore()
+    const adminStore = useAdminStore()
 
-    // 确保用户状态初始化完成
+    // ---------- 初始化状态 ----------
     if (!userStore.ready) {
-      await userStore.bootstrap()
+      try {
+        await userStore.bootstrap()
+        console.log('User Store Bootstrap Success:', userStore.user)
+      } catch {}
     }
-    // ================= 未登录，访问需要登录的页面 =================
-    if (to.meta.requiresAuth && !userStore.isLogin) {
-      return {
-        name: 'login',
-        query: {
-          purpose: 'Login',
-          redirect: to.fullPath,
-        },
+    if (!adminStore.ready) {
+      try {
+        await adminStore.bootstrap()
+        console.log('Admin Store Bootstrap Success:', adminStore.admin)
+      } catch {}
+    }
+
+    console.log('guard.ts | to:', to.name)
+    console.log('guard.ts | adminStore.isLogin:', adminStore.isLogin)
+    console.log('guard.ts | userStore.isLogin:', userStore.isLogin)
+
+    // ---------- 首页永远允许 ----------
+    if (to.name === 'home') return true
+
+    // ---------- 管理员路由保护 ----------
+    if (to.meta.requiresAdmin) {
+      if (!adminStore.isLogin) {
+        console.log('Redirecting to admin-login')
+        return { name: 'admin-login', query: { redirect: to.fullPath } }
       }
+      return true // 管理员已登录
     }
 
-    // ================= 已登录 → 禁止访问 guestOnly 页面 =================
-    if (to.meta.guestOnly && userStore.isLogin) {
-      return userStore.isAdmin
-        ? { name: 'admin-product-list' }
-        : { name: 'home' }
+    // ---------- 前台用户路由保护 ----------
+    if (to.meta.requiresAuth) {
+      if (!userStore.isLogin) {
+        console.log('Redirecting to login')
+        return { name: 'login', query: { redirect: to.fullPath } }
+      }
+      return true
     }
 
-    // ================= 非管理员 → 禁止访问后台 =================
-    if (to.meta.requiresAdmin && !userStore.isAdmin) {
-      return { name: 'home' }
-    }
     return true
   })
 }

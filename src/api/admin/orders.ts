@@ -1,5 +1,5 @@
 // src/api/admin/orders.ts
-import request from '@/utils/request'
+import { adminRequest } from '@/utils/request'
 
 // 订单列表
 export function fetchAdminOrders(params?: {
@@ -7,12 +7,12 @@ export function fetchAdminOrders(params?: {
   page_size?: number
   status?: string
 }) {
-  return request.get('/admin/orders/', { params })
+  return adminRequest.get('/admin/orders/', { params })
 }
 
 // 订单详情
 export function fetchAdminOrderDetail(id: number | string) {
-  return request.get(`/admin/orders/${id}/`)
+  return adminRequest.get(`/admin/orders/${id}/`)
 }
 
 // 发货
@@ -27,5 +27,5 @@ export function adminShipOrder(
     }>
   }
 ) {
-  return request.post(`/admin/orders/${id}/ship/`, payload)
+  return adminRequest.post(`/admin/orders/${id}/ship/`, payload)
 }

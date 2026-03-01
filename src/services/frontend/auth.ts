@@ -1,8 +1,9 @@
 // 业务封装/状态初始化
 // src/services/frontend/auth.ts
 import { frontendAuthApi, frontendUserApi } from '@/api'
-import type { LoginResponse, User } from '@/types'
-import { clearToken, getAccessToken, setToken } from '@/utils/auth'
+import type { User } from '@/types'
+import { clearUserToken, getUserAccessToken, setUserToken } from '@/utils/auth'
+
 /**
  * 用户注册
  */
@@ -28,13 +29,10 @@ export async function loginUser(data: {
   email: string
   password: string
 }): Promise<User> {
-  // 调用登录接口login
   const res = await frontendAuthApi.login(data)
-  // 类型断言：将响应数据转换为已知的LoginResponse类型
-  const { access, refresh, user } = res.data as LoginResponse
-  // 保存认证令牌到本地存储
-  setToken(access, refresh)
-  // 返回用户令牌供调用者使用
+  const { access, refresh, user } = res.data
+
+  setUserToken(access, refresh)
   return user
 }
 
@@ -42,21 +40,14 @@ export async function loginUser(data: {
  * 初始化当前用户（应用启动 / 刷新时）
  */
 export async function initUser(): Promise<User | null> {
-  const token = getAccessToken()
+  const token = getUserAccessToken()
   if (!token) return null
 
   try {
     const res = await frontendUserApi.me()
     return res.data
   } catch {
-    clearToken()
+    clearUserToken()
     return null
   }
-}
-
-/**
- * 用户退出
- */
-export function logoutUser() {
-  clearToken()
 }

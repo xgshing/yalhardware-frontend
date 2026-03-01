@@ -1,7 +1,7 @@
 <!-- src/components/review/OrderReview.vue -->
 <template>
   <div class="order-review-page">
-    <h2>订单评价</h2>
+    <h2>Order Reviews</h2>
 
     <div
       v-for="item in reviewItems"
@@ -11,7 +11,7 @@
       <!-- 商品信息 -->
       <div class="product-info">
         <img
-          :src="item.product_image || '/default-product.png'"
+          :src="item.product_image || defaultImage"
           alt=""
           class="product-image"
         />
@@ -24,11 +24,12 @@
         </div>
       </div>
 
-      <!-- 已评价显示 -->
+      <!-- ================= 已评价 ================= -->
       <div
         v-if="item.review"
         class="review-display"
       >
+        <!-- 星级 -->
         <div class="review-rating">
           <span
             v-for="star in 5"
@@ -38,6 +39,7 @@
             >★</span
           >
         </div>
+
         <p class="review-content">{{ item.review.content }}</p>
 
         <!-- 图片 -->
@@ -58,7 +60,7 @@
           v-if="item.review.reply?.merchant_reply"
           class="merchant-reply"
         >
-          <strong>商家回复：</strong>
+          <strong>Merchant Reply: </strong>
           <p>{{ item.review.reply.merchant_reply }}</p>
         </div>
 
@@ -67,12 +69,29 @@
           v-if="item.review.append_content"
           class="append-review"
         >
-          <strong>追加评价：</strong>
+          <strong>Additional Review: </strong>
           <p>{{ item.review.append_content }}</p>
+        </div>
+
+        <!-- 可追评 -->
+        <div
+          v-if="item.review.can_append"
+          class="append-form"
+        >
+          <textarea
+            v-model="item.appendForm.content"
+            placeholder="Add additional feedback..."
+          />
+          <button
+            :disabled="item.submitting"
+            @click="submitAppend(item)"
+          >
+            {{ item.submitting ? 'Submitting...' : 'Submit Additional Review' }}
+          </button>
         </div>
       </div>
 
-      <!-- 可评价显示 -->
+      <!-- ================= 未评价 ================= -->
       <div
         v-else-if="item.can_review"
         class="submit-review"
@@ -89,8 +108,6 @@
               filled:
                 star <= item.reviewForm.rating || star <= item.hoverRating,
             }"
-            @mouseover="item.hoverRating = star"
-            @mouseleave="item.hoverRating = 0"
             @click="item.reviewForm.rating = star"
             >★</span
           >
@@ -98,7 +115,7 @@
 
         <textarea
           v-model="item.reviewForm.content"
-          placeholder="分享您的购物体验..."
+          placeholder="Share your experience..."
           rows="3"
         ></textarea>
 
@@ -110,13 +127,15 @@
             accept="image/*"
             @change="onSelectImages($event, item)"
           />
-          <div class="preview-images">
-            <img
-              v-for="(file, idx) in item.reviewForm.images"
-              :key="idx"
-              :src="file.preview"
-              class="preview"
-            />
+          <div class="preview-list">
+            <div
+              v-for="(img, index) in item.reviewForm.images"
+              :key="index"
+              class="preview-wrapper"
+            >
+              <img :src="img.preview" />
+              <button @click="removeImage(item, index)">×</button>
+            </div>
           </div>
         </div>
 
@@ -125,48 +144,45 @@
           :disabled="item.submitting"
           @click="submitReview(item)"
         >
-          {{ item.submitting ? '提交中...' : '提交评价' }}
+          {{ item.submitting ? 'Submitting...' : 'Submit Review' }}
         </button>
       </div>
 
+      <!-- ================= 不可评价 ================= -->
       <div
         v-else
-        class="already-reviewed"
+        class="not-allowed"
       >
-        您已完成此商品评价
+        Order not eligible for review.
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+  import { uploadApi } from '@/api/common/upload'
   import { reviewService } from '@/services/frontend/reviews'
-  import type { OrderItem } from '@/types'
+  import type { OrderItem, OrderItemUI, ReviewFile } from '@/types'
   import { onMounted, ref } from 'vue'
 
-  interface Props {
-    orderItems: OrderItem[]
-  }
-
-  const props = defineProps<Props>()
+  const props = defineProps<{ orderItems: OrderItem[] }>()
 
   // 用于在页面展示和操作的状态副本
-  const reviewItems = ref<OrderItem[]>([])
+  const reviewItems = ref<OrderItemUI[]>([])
+  const defaultImage = '/default-product.png'
+  const MAX_IMAGES = 6
+  const emptyImages: ReviewFile[] = []
 
   onMounted(async () => {
     // 深拷贝 orderItems 并添加前端状态
     reviewItems.value = props.orderItems.map((item) => ({
       ...item,
 
-      reviewForm: {
-        rating: 0,
-        content: '',
-        images: [],
-      },
+      reviewForm: { rating: 0, content: '', images: emptyImages },
+      appendForm: { content: '' },
       hoverRating: 0,
       submitting: false,
     }))
-
     // 拉取已评价数据
     for (const item of reviewItems.value) {
       if (item.can_review) {
@@ -175,8 +191,10 @@
           page: 1,
           pageSize: 1,
         })
-        if (res.results?.length) {
-          item.review = res.results[0]
+
+        const review = res.results?.[0]
+        if (review) {
+          item.review = review
           item.can_review = false
         }
       }
@@ -184,53 +202,83 @@
   })
 
   // 图片选择
-  function onSelectImages(e: Event, item: OrderItem) {
-    const target = e.target as HTMLInputElement
-    if (!target.files) return
-    for (const file of Array.from(target.files)) {
+  function onSelectImages(e: Event, item: any) {
+    const files = (e.target as HTMLInputElement).files
+    if (!files) return
+
+    for (const file of Array.from(files)) {
+      if (item.reviewForm.images.length >= MAX_IMAGES) break
       const reader = new FileReader()
-      reader.onload = (event) => {
+      reader.onload = (ev) => {
         item.reviewForm.images.push({
           file,
-          preview: event.target?.result as string,
+          preview: ev.target?.result,
         })
       }
       reader.readAsDataURL(file)
     }
   }
 
+  // 移除图片
+  function removeImage(item: any, index: number) {
+    item.reviewForm.images.splice(index, 1)
+  }
+
   // 提交评价
-  async function submitReview(item: OrderItem) {
-    if (!item.reviewForm.rating) return alert('请选择评分')
-    if (!item.reviewForm.content.trim()) return alert('请输入评价内容')
+  async function submitReview(item: any) {
+    if (!item.reviewForm.rating) return alert('Please select rating')
+    if (!item.reviewForm.content.trim()) return alert('Please enter review')
 
     item.submitting = true
     try {
-      console.log('提交前 rating=', item.reviewForm.rating)
+      // 1️⃣ 上传图片
+      const uploadPromises = item.reviewForm.images.map((img: any) =>
+        uploadApi.upload(img.file, 'reviews')
+      )
 
+      const uploadResults = await Promise.all(uploadPromises)
+      const imageUrls = uploadResults.map((res) => res.data.url)
+
+      // 2️⃣ 创建评论
       await reviewService.createReview({
         order_item_id: item.id,
         rating: item.reviewForm.rating,
         content: item.reviewForm.content,
-        media_ids: [], // 根据实际 media 上传逻辑处理
+        images: imageUrls,
       })
 
-      // 重新拉取该商品的评价
-
-      const reviewRes = await reviewService.getReviews({
+      // 3️⃣ 重新拉取
+      const res = await reviewService.getReviews({
         order_item_id: item.id,
         page: 1,
         pageSize: 1,
       })
-      console.log('后台返回 review=', reviewRes.results[0])
-      item.review = reviewRes.results?.[0] || null
+
+      item.review = res.results[0]
       item.can_review = false
-      item.reviewForm.rating = 0
-      item.reviewForm.content = ''
-      item.reviewForm.images = []
     } catch (err) {
       console.error(err)
-      alert('提交失败，请重试')
+      alert('Submission failed')
+    } finally {
+      item.submitting = false
+    }
+  }
+
+  // 追评
+  async function submitAppend(item: any) {
+    if (!item.appendForm.content.trim()) return
+
+    item.submitting = true
+    try {
+      await reviewService.appendReview({
+        review_id: item.review.id,
+        content: item.appendForm.content,
+      })
+
+      item.review.append_content = item.appendForm.content
+      item.review.can_append = false
+    } catch {
+      alert('Failed to append review')
     } finally {
       item.submitting = false
     }
@@ -365,7 +413,7 @@
     font-size: 13px;
     color: #555;
   }
-  .already-reviewed {
+  .not-allowed {
     color: #999;
     font-style: italic;
   }

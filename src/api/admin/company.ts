@@ -1,9 +1,8 @@
 // src/api/admin/company.ts
-import request from '@/utils/request'
-
+import { adminRequest } from '@/utils/request'
 export const companyApi = {
-  getProfile: () => request.get('/company/profile/'),
-  saveProfile: (data: any) => request.post('/company/profile/', data),
+  getProfile: () => adminRequest.get('/company/profile/'),
+  saveProfile: (data: any) => adminRequest.post('/company/profile/', data),
   uploadRichImage: (form: FormData) =>
-    request.post('/upload/rich-image/', form),
+    adminRequest.post('/upload/rich-image/', form),
 }

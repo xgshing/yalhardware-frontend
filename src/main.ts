@@ -1,23 +1,35 @@
 // src/main.ts
-
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
-
-import { useUserStore } from '@/stores/user'
 import App from './App.vue'
 import router from './router'
+
+import { useAdminStore } from '@/stores/admin'
+import { useUserStore } from '@/stores/user'
+import { setupRouterGuard } from './router/guard'
 
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 
-const app = createApp(App)
+async function bootstrap() {
+  const app = createApp(App)
 
-app.use(createPinia())
+  app.use(createPinia())
+  const pinia = createPinia()
 
-const userStore = useUserStore()
-await userStore.bootstrap()
+  app.use(pinia)
+  app.use(router)
+  app.use(ElementPlus)
 
-app.use(router)
-app.use(ElementPlus)
+  const userStore = useUserStore()
+  const adminStore = useAdminStore()
 
-app.mount('#app')
+  // 页面刷新时恢复双端登录状态
+  await Promise.all([userStore.bootstrap(), adminStore.bootstrap()])
+
+  setupRouterGuard(router)
+
+  app.mount('#app')
+}
+
+bootstrap()

@@ -1,5 +1,4 @@
 <!-- src/components/NavBar.vue -->
-<!-- src/components/NavBar.vue -->
 <template>
   <div>
     <header :class="['header', { 'header-hidden': !isNavVisible }]">
@@ -142,7 +141,7 @@
 </template>
 
 <script setup lang="ts">
-  import { fetchCategoryTree, logoutUser } from '@/services'
+  import { fetchCategoryTree } from '@/services'
   import { useCartStore } from '@/stores/cart'
   import { useUserStore } from '@/stores/user'
   import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
@@ -184,7 +183,7 @@
   const userStore = useUserStore()
 
   // computed
-  const isLoggedIn = computed(() => !!userStore.user)
+  const isLoggedIn = computed(() => userStore.role === 'user')
   const userFullName = computed(() => userStore.fullName)
 
   // 下拉状态
@@ -211,7 +210,6 @@
     isOpen.value = false
   }
   const handleLogout = () => {
-    logoutUser()
     userStore.logout()
     isOpen.value = false
     router.push({ name: 'home' })

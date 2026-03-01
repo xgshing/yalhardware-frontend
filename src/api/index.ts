@@ -1,5 +1,6 @@
 // src/api/index.ts
 
+export * from './admin/auth'
 export * from './admin/category'
 export * from './admin/comments'
 export * from './admin/company'

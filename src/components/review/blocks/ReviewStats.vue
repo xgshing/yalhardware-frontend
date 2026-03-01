@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-  import type { ReviewStats } from '@/types/frontend/review'
+  import type { ReviewStats } from '@/types/api/review'
 
   defineProps<{
     stats: ReviewStats | null

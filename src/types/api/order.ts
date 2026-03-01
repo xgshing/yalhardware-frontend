@@ -1,5 +1,5 @@
 // src/types/frontend/order.ts
-// 订单与评论类型定义
+import type { Review } from './review'
 
 export type OrderStatus =
   | 'PENDING'
@@ -8,11 +8,6 @@ export type OrderStatus =
   | 'COMPLETED'
   | 'CANCELLED'
 
-export interface ReviewFile {
-  file: File
-  preview: string
-}
-
 export interface OrderItem {
   id: number
   product_id: number
@@ -20,18 +15,10 @@ export interface OrderItem {
   sku_title: string
   price: number
   quantity: number
-  review: any
+
+  review: Review | null
   can_review: boolean
   product_image?: string
-  // 当前用户在页面上的评价表单
-  reviewForm: {
-    rating: number
-    content: string
-    images: ReviewFile[]
-  }
-  // 鼠标 hover 时高亮星星数
-  hoverRating: number
-  submitting?: boolean
 }
 
 export interface OrderDetail {
@@ -53,10 +40,8 @@ export interface OrderCardDTO {
   status: OrderStatus
   status_label: string
   created_at: string
-
   total_amount: number
   currency: string
-
   items: OrderItem[]
   available_actions: string[]
 }

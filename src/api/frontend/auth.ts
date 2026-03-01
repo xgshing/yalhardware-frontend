@@ -1,20 +1,22 @@
 // API 定义
 // src/api/frontend/auth.ts
-import request from '@/utils/request'
+import type { LoginResponse } from '@/types'
+import { frontendRequest } from '@/utils/request'
 
 export const frontendAuthApi = {
+  login: (data: { email: string; password: string }) =>
+    frontendRequest.post<LoginResponse>('/users/auth/login/', data),
+
   register: (data: {
     email: string
     password: string
     confirm_password: string
     first_name: string
     last_name: string
-  }) => request.post('/users/auth/register/', data),
-
-  login: (data: { email: string; password: string }) =>
-    request.post('/users/auth/login/', data),
+  }) => frontendRequest.post('/users/auth/register/', data),
 }
 
-export function refreshToken(refresh: string) {
-  return request.post('/token/refresh/', { refresh }) // SimpleJWT 默认地址
+export const frontendTokenApi = {
+  refresh: (refresh: string) =>
+    frontendRequest.post<{ access: string }>('/token/refresh/', { refresh }),
 }

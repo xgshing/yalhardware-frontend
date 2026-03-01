@@ -1,9 +1,9 @@
 // src/api/admin/category.ts
-import request from '@/utils/request'
+import { adminRequest } from '@/utils/request'
 
 export const adminCategoryApi = {
   /** 分类树 */
-  tree: () => request.get('/admin/categories/tree/'),
+  tree: () => adminRequest.get('/admin/categories/tree/'),
   /** 新建分类 */
-  create: (data: any) => request.post('/admin/categories/', data),
+  create: (data: any) => adminRequest.post('/admin/categories/', data),
 }

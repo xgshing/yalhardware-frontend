@@ -1,12 +1,6 @@
 // src/services/frontend/reviews.ts
 import { reviewApi } from '@/api/frontend/reviews'
-import type {
-  Review,
-  ReviewHelpfulResponse,
-  ReviewListResponse,
-  ReviewPermission,
-  ReviewStats,
-} from '@/types'
+import type { Review, ReviewListResponse } from '@/types'
 
 export const reviewService = {
   async getReviews(params: {
@@ -37,26 +31,11 @@ export const reviewService = {
     return { results: [], total: 0 }
   },
 
-  async getReviewStats(productId: number): Promise<ReviewStats> {
-    const res = await reviewApi.getReviewStats(productId)
-    return res.data
-  },
-
-  async toggleHelpful(reviewId: number): Promise<ReviewHelpfulResponse> {
-    const res = await reviewApi.toggleHelpful(reviewId)
-    return res.data
-  },
-
-  async getPermission(orderItemId: number): Promise<ReviewPermission> {
-    const res = await reviewApi.getReviewPermission(orderItemId)
-    return res.data
-  },
-
   createReview(payload: {
     order_item_id: number
     rating: number
     content: string
-    media_ids?: number[]
+    images?: string[]
   }) {
     return reviewApi.createReview(payload)
   },

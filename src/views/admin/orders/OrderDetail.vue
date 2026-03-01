@@ -16,7 +16,7 @@
     <!-- Order Info -->
     <el-descriptions
       border
-      column="3"
+      :column="3"
       class="section"
     >
       <el-descriptions-item label="用户">

@@ -1,128 +1,150 @@
 // src/utils/request.ts
-/**
- * Axios HTTP 客户端配置(管理接口的基础配置)
- * 封装了与后端 API 的通信逻辑，包括请求拦截、响应拦截和错误处理
- * 使用环境变量配置 API 基础地址，支持 JWT 认证
- */
-// src/utils/request.ts
 import axios from 'axios'
-import { clearToken, getAccessToken, getRefreshToken, setToken } from './auth'
 
-/**
- * ===============================
- * 创建 Axios 实例
- * 配置基础的 API 请求设置
- * ===============================
- */
-const request = axios.create({
-  // 基础 API URL：从环境变量 VITE_API_BASE_URL 获取，拼接 /api 路径
-  // 支持不同环境（开发 / 测试 / 生产）
-  baseURL: `${import.meta.env.VITE_API_BASE_URL}/api`,
-  timeout: 30000,
-})
+import type {
+  AxiosError,
+  AxiosInstance,
+  InternalAxiosRequestConfig,
+} from 'axios'
 
-/**
- * =================================
- * 刷新 Token 专用实例（不带拦截器）
- * 与主 request 完全隔离
- * =================================
- */
-const refreshClient = axios.create({
-  baseURL: `${import.meta.env.VITE_API_BASE_URL}/api`,
-  timeout: 10000,
-})
+import {
+  clearAdminToken,
+  clearUserToken,
+  getAdminAccessToken,
+  getAdminRefreshToken,
+  getUserAccessToken,
+  getUserRefreshToken,
+  setAdminToken,
+  setUserToken,
+} from './auth'
+import { isTokenExpiringSoon } from './jwt'
 
-/**
- * ===============================
- * 请求拦截器
- * 自动为普通请求添加 access token
- * ===============================
- */
-request.interceptors.request.use((config) => {
-  // refresh token 的请求，绝对不加 Authorization
-  if (config.url?.includes('/token/refresh/')) {
-    return config
+const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api`
+
+// ============================================================
+// 创建带：
+// 1. 主动提前刷新
+// 2. 401 被动兜底
+// 3. refresh 并发锁
+// 的 axios 实例
+// ============================================================
+
+function createAuthInstance(options: {
+  getAccess: () => string | null
+  getRefresh: () => string | null
+  setToken: (access: string, refresh: string) => void
+  clearToken: () => void
+}): AxiosInstance {
+  const instance = axios.create({
+    baseURL: BASE_URL,
+    timeout: 30000,
+  })
+
+  let refreshing = false
+  let queue: Array<(token: string | null) => void> = []
+
+  // 处理排队请求
+  function resolveQueue(token: string | null) {
+    queue.forEach((cb) => cb(token))
+    queue = []
   }
 
-  // 从localStorage(本地存储API）中获取访问令牌（JWT Token)
-  const token = getAccessToken()
+  // 刷新 access token
+  async function refreshToken(): Promise<string | null> {
+    const refresh = options.getRefresh()
+    if (!refresh) return null
 
-  // 如果存在Token，将其添加到请求头的Autharization字段
-  if (token) {
-    config.headers = config.headers ?? {}
-
-    // Bearer Token认证方案，格式Bearer<token>
-    config.headers.Authorization = `Bearer ${token}`
-  }
-  // 返回处理后的配置对象，继续请求发送流程
-  return config
-})
-
-/**
- * ===============================
- * 响应拦截器
- * 处理 access token 过期并自动刷新
- * ===============================
- */
-let isRefreshing = false
-let queue: Array<(token: string) => void> = []
-
-request.interceptors.response.use(
-  (res) => res,
-  async (err) => {
-    const status = err.response?.status
-    const original = err.config
-
-    if (status === 401 && !original._retry) {
-      original._retry = true
-
-      const refresh = getRefreshToken()
-      if (!refresh) {
-        clearToken()
-        return Promise.reject(err)
-      }
-
-      // === 当前没有在刷新 ===
-      if (!isRefreshing) {
-        isRefreshing = true
-
-        try {
-          // 使用 refreshClient，而不是 request
-          const { data } = await refreshClient.post('/token/refresh/', {
-            refresh,
-          })
-
-          // 保存新 access token（refresh 不变）
-          setToken(data.access, refresh)
-
-          isRefreshing = false
-
-          // 释放队列
-          queue.forEach((cb) => cb(data.access))
-          queue = []
-
-          // 重试原请求
-          original.headers.Authorization = `Bearer ${data.access}`
-          return request(original)
-        } catch (err) {
-          isRefreshing = false
-          queue = []
-          clearToken()
-          return Promise.reject(err)
-        }
-      }
-
-      // === 正在刷新，进入队列 ===
-      return new Promise((resolve) => {
-        queue.push((newToken) => {
-          original.headers.Authorization = `Bearer ${newToken}`
-          resolve(request(original))
-        })
+    try {
+      const res = await axios.post(`${BASE_URL}/auth/refresh/`, {
+        refresh,
       })
+      const newAccess = res.data.access as string
+      options.setToken(newAccess, refresh)
+      return newAccess
+    } catch {
+      options.clearToken()
+      return null
+    }
+  }
+
+  // ================= 请求拦截（主动提前刷新） =================
+  instance.interceptors.request.use(async (config) => {
+    let token = options.getAccess()
+
+    // 如果 token 快过期，主动刷新
+    if (token && isTokenExpiringSoon(token, 60)) {
+      if (!refreshing) {
+        refreshing = true
+        const newToken = await refreshToken()
+        resolveQueue(newToken)
+        refreshing = false
+        token = newToken
+      } else {
+        token = await new Promise((resolve) => {
+          queue.push(resolve)
+        })
+      }
     }
 
-    return Promise.reject(err)
-  }
-)
+    if (token) {
+      config.headers = config.headers ?? {}
+      config.headers.Authorization = `Bearer ${token}`
+    }
 
-export default request
+    return config
+  })
+
+  // ================= 响应拦截（401 被动兜底） =================
+  instance.interceptors.response.use(
+    (res) => res,
+    async (error: AxiosError) => {
+      const original = error.config as
+        | (InternalAxiosRequestConfig & { _retry?: boolean })
+        | undefined
+
+      if (!original || error.response?.status !== 401 || original._retry) {
+        return Promise.reject(error)
+      }
+
+      original._retry = true
+
+      if (refreshing) {
+        return new Promise((resolve, reject) => {
+          queue.push((token) => {
+            if (!token) return reject(error)
+            original.headers.Authorization = `Bearer ${token}`
+            resolve(instance(original))
+          })
+        })
+      }
+
+      refreshing = true
+      const newToken = await refreshToken()
+      resolveQueue(newToken)
+      refreshing = false
+
+      if (!newToken) return Promise.reject(error)
+
+      original.headers.Authorization = `Bearer ${newToken}`
+      return instance(original)
+    }
+  )
+
+  return instance
+}
+
+// 前台实例
+export const frontendRequest = createAuthInstance({
+  getAccess: getUserAccessToken,
+  getRefresh: getUserRefreshToken,
+  setToken: setUserToken,
+  clearToken: clearUserToken,
+})
+
+// 后台实例
+export const adminRequest = createAuthInstance({
+  getAccess: getAdminAccessToken,
+  getRefresh: getAdminRefreshToken,
+  setToken: setAdminToken,
+  clearToken: clearAdminToken,
+})
