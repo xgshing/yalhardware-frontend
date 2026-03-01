@@ -8,10 +8,10 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
+  import { adminRequest } from '@/utils/request'
   import Quill from 'quill'
-import 'quill/dist/quill.snow.css'
-  import request from '@/utils/request'
+  import 'quill/dist/quill.snow.css'
+  import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
   // ------------------ Props ------------------
   interface Props {
@@ -20,7 +20,7 @@ import 'quill/dist/quill.snow.css'
   }
   const props = defineProps<Props>()
 
-  // ------------------ Emits ------------------
+  // ------------------ Emits ------------------re
   const emit = defineEmits<{
     (e: 'update:modelValue', v: string): void
   }>()
@@ -30,17 +30,17 @@ import 'quill/dist/quill.snow.css'
   let quill: InstanceType<typeof Quill> | null = null
   // ------------------ 图片上传 ------------------
   const uploadImage = async (file: File): Promise<string> => {
-  const formData = new FormData()
-  formData.append('image', file)
+    const formData = new FormData()
+    formData.append('image', file)
 
-  const res = await request.post('/upload/rich-image/', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  })
+    const res = await adminRequest.post('/upload/rich-image/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
 
-  return res.data.url
-}
+    return res.data.url
+  }
   // ------------------ 点击图片切换对齐 ------------------
   const handleImageClick = (img: HTMLImageElement) => {
     const currentAlign = img.getAttribute('data-align') || 'left'
